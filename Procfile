@@ -1,1 +1,1 @@
-web: gunicorn -w 4 -k eventlet.main:game_queue
+web: gunicorn -w 4 -k eventlet.main:game_queue.app
