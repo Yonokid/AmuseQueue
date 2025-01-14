@@ -1,1 +1,1 @@
-web: python game_queue.py
+web: gunicorn -w 4 -k eventlet.main:game_queue

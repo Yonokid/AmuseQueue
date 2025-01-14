@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_socketio import SocketIO
 
-socketio = SocketIO()
+socketio = SocketIO(async_mode='eventlet')
 
 def create_app():
     app = Flask(__name__)
