@@ -4,11 +4,11 @@ store_name = 'GAME PARK'
 [game_1]
 name = 'maimai DX'
 #wait_time = 963
-wait_time = 10
+wait_time = 25
 
 [game_2]
 name = 'CHUNITHM'
-wait_time = 10
+wait_time = 15
 
 [game_3]
 name = 'ONGEKI'
