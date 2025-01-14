@@ -16,6 +16,7 @@ for i in range(len(config_info)+1):
 for queue in queues:
     queue['queue'] = []
     queue['timer_thread'] = None
+    queue['timer_running'] = False
 user_socket_ids = {}
 
 def start_timer(game_id):
