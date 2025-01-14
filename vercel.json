@@ -1,11 +1,5 @@
 {
   "version": 2,
-  "env": {
-    "APP_ID": "@channels-app-id",
-    "KEY": "app-key",
-    "SECRET": "@channels-app-secret",
-    "CLUSTER": "cluster-region"
-  },
   "builds": [{ "src": "game_queue.py", "use": "@vercel/python" }],
   "routes": [{ "src": "/(.*)", "dest": "/game_queue.py" }]
 }
