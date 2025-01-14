@@ -3,6 +3,6 @@ from app.routes import init_routes
 
 app = create_app()
 socketio = get_socket()
-if __name__ == '__main__':
-    socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
+#if __name__ == '__main__':
+    #socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
 init_routes(app)
