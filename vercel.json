@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "game_queue.py", "use": "@vercel/python" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "/game_queue.py" }
+  ]
+}
