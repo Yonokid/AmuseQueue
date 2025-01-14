@@ -46,6 +46,8 @@ def handle_join_queue(data):
         raise Exception(f'Invalid game id {game_id} or username {username}')
 
     game_index = int(game_id.split('_')[1])
+    if username in queues[game_index]['queue']:
+        return
     queues[game_index]['queue'].append(username)
     user_socket_ids[username] = request.sid
 
