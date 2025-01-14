@@ -19,6 +19,9 @@ for queue in queues:
 user_socket_ids = {}
 
 def start_timer(game_id):
+    # Set the timer_running flag to True to prevent multiple threads from starting
+    queues[game_id]['timer_running'] = True
+
     time_left = queues[game_id]['wait_time']
     while time_left > 0:
         socketio.emit('timer_update', {'game_id': game_id, 'time_left': time_left})
@@ -33,7 +36,10 @@ def start_timer(game_id):
 
     socketio.emit('queue_update', {'game_id': game_id, 'queue': queues[game_id]['queue'], 'wait_time': queues[game_id]['wait_time']})
 
+    # Once the timer finishes, reset the flag and check if the queue is still not empty
+    queues[game_id]['timer_running'] = False
     queues[game_id]['timer_thread'] = None
+
     if queues[game_id]['queue']:
         start_timer(game_id)
 
@@ -51,7 +57,9 @@ def handle_join_queue(data):
     queues[game_index]['queue'].append(username)
     user_socket_ids[username] = request.sid
 
-    if queues[game_index]['timer_thread'] is None:
+    # Only start a new timer if one is not already running
+    if not queues[game_index]['timer_running']:
+        queues[game_index]['timer_running'] = True  # Set the flag to indicate the timer is starting
         queues[game_index]['timer_thread'] = threading.Thread(target=start_timer, args=(game_index,))
         queues[game_index]['timer_thread'].start()
 
