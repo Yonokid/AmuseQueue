@@ -87,10 +87,19 @@
                 });
                 socket.on('user_removed', function(data) {
                     if (data.user) {
-                        vibrate(2000);
-                        alert("You have been removed from the queue for game " + data.game_id + " because your time is up.");
+                        vibrateDevice();
+                        setTimeout(function() {
+                                alert("You have been removed from the queue for game " + data.game_id + " because your time is up.");
+                            }, 1000);
                     }
                 });
+                function vibrateDevice() {
+                    if ("vibrate" in navigator) {
+                      navigator.vibrate(5000);  // Vibrates for 500ms
+                    } else {
+                      console.log("Vibration not supported.");
+                    }
+                  }
             </script>
         {% endfor %}
     </div>
