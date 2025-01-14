@@ -1,0 +1,15 @@
+[store]
+store_name = 'GAME PARK'
+
+[game_1]
+name = 'maimai DX'
+#wait_time = 963
+wait_time = 10
+
+[game_2]
+name = 'CHUNITHM'
+wait_time = 10
+
+[game_3]
+name = 'ONGEKI'
+wait_time = 10
