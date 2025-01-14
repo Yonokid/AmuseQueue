@@ -1,1 +1,1 @@
-web: gunicorn -k eventlet game_queue:app
+web: gunicorn --worker-class eventlet -w 1 game_queue:app
