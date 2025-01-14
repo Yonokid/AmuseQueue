@@ -17,7 +17,7 @@
                     <h4>Current Queue:</h4>
                     <ul id="queue_{{i}}" class="list-group">
                         {% for user in queue['queue'] %}
-                            <li class="list-group-item">{{ user }}</li>
+                            <li class="list-group-item text-wrap">{{ user }}</li>
                             <div id="countdown_{{i}}"></div>
                         {% endfor %}
                     </ul>
