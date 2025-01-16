@@ -1,6 +1,5 @@
 from flask import render_template, url_for, redirect, request, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room
-from werkzeug.formparser import F
 from . import socketio
 from app.helpers import load_config, create_queues, randomize_string, get_random_token, username_filtered, verify_operator_code
 import time
