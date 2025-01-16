@@ -21,7 +21,7 @@
                     </ul>
                 </div>
                 <div>
-                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal_{{i}}">Join Queue</button>
+                    <button type="button" id="join_button_{{i}}" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal_{{i}}">Join Queue</button>
                 </div>
             </div>
             <div class="modal fade" id="exampleModal_{{i}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -33,7 +33,7 @@
                         </div>
                         <form id="join-form_{{i}}">
                             <div class="modal-body">
-                                <p>Please write your username below.</p>
+                                <p id="exampleModalText_{{i}}">Please write your username below.</p>
                                 <input type="text" class="form-control" placeholder="Username" aria-label="Username" id="username_{{i}}" name="username">
                                 <input type="hidden" name="game_id" id="game_id_{{i}}" value="game_{{i}}">
                             </div>
@@ -46,19 +46,33 @@
                 </div>
             </div>
             <script>
-                var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
-                document.getElementById('join-form_{{i}}').addEventListener('submit', function (e) {
-                        e.preventDefault();
-                        var username = document.getElementById('username_{{i}}').value;
-                        var game_id = document.getElementById('game_id_{{i}}').value;
-                        localStorage.setItem('token', username);
+            var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+            document.getElementById('join-form_{{i}}').addEventListener('submit', function (e) {
+                e.preventDefault();
+                var username = document.getElementById('username_{{i}}').value;
+                var game_id = document.getElementById('game_id_{{i}}').value;
+                fetch(`/get_token?username=${username}&game_id=${game_id}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        var token = data.token;
+                        localStorage.setItem('token_{{i}}', token);
+                        var join_button = document.getElementById('join_button_{{i}}');
+                        join_button.classList.add('invisible');
                         socket.emit('join_queue', {
                             username: username,
-                            game_id: game_id
+                            game_id: game_id,
+                            token: token
                         });
                         var modal = bootstrap.Modal.getInstance(document.getElementById('exampleModal_{{i}}'));
                         modal.hide();
+                    })
+                    .catch(error => {
+                        var modalText = document.getElementById('exampleModalText_{{i}}');
+                        modalText.textContent = 'Invalid Username!';
+                        modalText.classList.add("text-danger-emphasis");
+                        console.error('Error fetching token:', error);
                     });
+            });
                 document.addEventListener("DOMContentLoaded", function() {
                         const queueElement = document.getElementById('queue_{{i}}');
                         queueElement.addEventListener('click', function(event) {
@@ -71,8 +85,10 @@
                                 socket.emit('remove_user', {
                                     username: username,
                                     game_id: game_id,
-                                    token: localStorage.getItem('token', username)
+                                    token: localStorage.getItem('token_{{i}}')
                                 });
+                                var join_button = document.getElementById('join_button_{{i}}');
+                                join_button.classList.remove('invisible');
                             }
                         });
                     });
@@ -83,7 +99,7 @@
                         data.queue.forEach(function(user) {
                             var li = document.createElement('li');
                             li.classList.add("list-group-item", "d-flex", "align-items-center")
-                            li.setAttribute("username", user);
+                            li.setAttribute("username", user.username);
                             li.setAttribute("game_id", "game_{{i}}");
 
                             var blank_col = document.createElement('span');
@@ -91,7 +107,7 @@
                             li.appendChild(blank_col);
                             var username = document.createElement('span');
                             username.classList.add("col");
-                            username.textContent = user;
+                            username.textContent = user.username;
                             li.appendChild(username);
 
                             var spanDelete = document.createElement('span');
@@ -100,7 +116,7 @@
                             deleteButton.classList.add("btn", "btn-danger", "btn-sm", "delete-btn");
                             deleteButton.textContent = 'Remove';
                             console.log(data);
-                            if (data.operator || localStorage.getItem('username') == user) {
+                            if (data.operator || localStorage.getItem('token_{{i}}') == user.token) {
                                 spanDelete.classList.add("visible");
                             } else {
                                 spanDelete.classList.add("invisible");
@@ -125,6 +141,8 @@
                 });
                 socket.on('user_removed', function(data) {
                     if (data.user) {
+                        var join_button = document.getElementById('join_button_' + data.game_id);
+                        join_button.classList.remove('invisible');
                         vibrateDevice();
                         setTimeout(function() {
                                 alert("You have been removed from the queue for game " + data.game_id + " because your time is up.");

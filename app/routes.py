@@ -1,8 +1,9 @@
-from flask import render_template, url_for, redirect, request
+from flask import render_template, url_for, redirect, request, jsonify
 from . import socketio
 import tomllib
 import time
-import uuid
+import jwt
+import random
 import threading
 from flask_socketio import emit, join_room, leave_room
 
@@ -21,6 +22,13 @@ for queue in queues:
     queue['timer_running'] = False
 user_socket_ids = {}
 
+
+def randomize_string(input_string):
+    char_list = list(input_string)
+    random.shuffle(char_list)
+    randomized_string = ''.join(char_list)
+    return randomized_string
+
 def start_timer(game_id):
     queues[game_id]['timer_running'] = True
 
@@ -28,23 +36,24 @@ def start_timer(game_id):
     while time_left > 0:
         socketio.emit('timer_update', {'game_id': game_id, 'time_left': time_left})
         if len(queues[game_id]) == 0:
+            queues[game_id]['timer_running'] = False
+            queues[game_id]['timer_thread'] = None
             return
         time.sleep(1)
         time_left -= 1
+    queues[game_id]['timer_running'] = False
 
     removed_user = queues[game_id]['queue'].pop(0)
     print(f"User {removed_user} was removed from the queue for game {game_id}")
-    user_socket_id = user_socket_ids.get(removed_user)
+    user_socket_id = user_socket_ids.get(removed_user['username'])
     if user_socket_id:
         socketio.emit('user_removed', {'game_id': game_id, 'user': removed_user}, room=user_socket_id)
 
     socketio.emit('queue_update', {'game_id': game_id, 'queue': queues[game_id]['queue'], 'wait_time': queues[game_id]['wait_time']})
 
-    queues[game_id]['timer_running'] = False
-    queues[game_id]['timer_thread'] = None
-
     if queues[game_id]['queue']:
-        start_timer(game_id)
+        queues[game_id]['timer_thread'] = threading.Thread(target=start_timer, args=(game_id,))
+        queues[game_id]['timer_thread'].start()
 
 @socketio.on('remove_user')
 def handle_remove_user(data):
@@ -52,13 +61,14 @@ def handle_remove_user(data):
     game_index = int(game_id.split('_')[1])
     username = data.get('username')
     token = data.get('token')
-    if token != username:
-        return
-    removed_user = queues[game_index]['queue'].remove(username)
+    removed_user = queues[game_index]['queue'].remove({'username': username, 'token': token})
     print(f"User {removed_user} was removed from the queue for game {game_id}")
-    if len(queues[game_id]) == 0:
-        queues[game_id]['timer_running'] = False
-        queues[game_id]['timer_thread'] = None
+    if len(queues[game_index]) == 0:
+        queues[game_index]['timer_running'] = False
+        queues[game_index]['timer_thread'] = None
+        if queues[game_id]['queue']:
+            queues[game_index]['timer_thread'] = threading.Thread(target=start_timer, args=(game_index,))
+            queues[game_index]['timer_thread'].start()
     socketio.emit('queue_update', {
         'game_id': game_index,
         'queue': queues[game_index]['queue'],
@@ -81,16 +91,10 @@ def handle_operator_access(data):
 def handle_join_queue(data):
     game_id = data.get('game_id')
     username = data.get('username')
-
-    if not game_id or not username:
-        raise Exception(f'Invalid game id {game_id} or username {username}')
-
     game_index = int(game_id.split('_')[1])
-    if username in queues[game_index]['queue'] or username.strip() == '' or username == "‎":
-        return
-    queues[game_index]['queue'].append(username)
+    token = data.get('token')
+    queues[game_index]['queue'].append({'username': username, 'token': token})
     user_socket_ids[username] = request.sid
-    print(user_socket_ids)
 
     if not queues[game_index]['timer_running']:
         queues[game_index]['timer_running'] = True
@@ -99,7 +103,7 @@ def handle_join_queue(data):
 
     socketio.emit('queue_update', {
         'game_id': game_index,
-        'queue': queues[game_index]['queue'],
+        'queue': [{"username": user["username"], "token": user[f"token"]} for user in queues[game_index]['queue']],
         'wait_time': queues[game_index]['wait_time'],
     })
 
@@ -125,3 +129,19 @@ def init_routes(app):
     @app.route('/join', methods=['GET', 'POST'])
     def join():
         return redirect(url_for('index'))
+
+    @app.route('/get_token', methods=['GET'])
+    def get_token():
+        username = request.args.get('username')
+        game_id = request.args.get('game_id')
+        if not game_id or not username:
+            raise Exception(f'Invalid game id {game_id} or username {username}')
+        if username.strip() == '' or username == "‎":
+            return
+        game_index = int(game_id.split('_')[1])
+        for user in queues[game_index]['queue']:
+            if user['username'] == username:
+                return
+        key = randomize_string(app.config['SECRET_KEY'])
+        token = jwt.encode({'username': username}, key, algorithm='HS256')
+        return jsonify({f'token': token})
