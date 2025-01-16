@@ -8,7 +8,7 @@
 
 <h2>Project Screenshots:</h2>
 
-<img src="https://files.catbox.moe/cfh7wz.png" alt="project-screenshot" width="400" height="400/">
+<img src="https://files.catbox.moe/cfh7wz.png" alt="project-screenshot" width="400" height="200/">
 
 <img src="https://files.catbox.moe/bsgsea.png" alt="project-screenshot" width="200" height="400/">
 
