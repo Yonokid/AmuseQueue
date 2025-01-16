@@ -11,31 +11,28 @@
                     <h2><b>{{ queue['name'] }}</b></h2>
                 </div>
                 <div>
-                    <h4>Wait Time: {{ queue['wait_time'] }}</h4>
+                    <h4>Wait Time: {{ formatTime(queue['wait_time']|int) }}</h4>
                 </div>
                 <div>
                     <h4>Current Queue:</h4>
                     <ul id="queue_{{i}}" class="list-group">
-                        {% for user in queue['queue'] %}
-                        {% endfor %}
                     </ul>
                 </div>
                 <div>
-                    <button type="button" id="join_button_{{i}}" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal_{{i}}">Join Queue</button>
+                    <button type="button" id="join_button_{{i}}" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#joinModal_{{i}}">Join Queue</button>
                 </div>
             </div>
-            <div class="modal fade" id="exampleModal_{{i}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal fade" id="joinModal_{{i}}" tabindex="-1" aria-labelledby="joinModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h1 class="modal-title fs-5" id="exampleModalLabel">Join {{ queue['name'] }} Queue</h1>
+                            <h1 class="modal-title fs-5" id="modalLabel">Join {{ queue['name'] }} Queue</h1>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <form id="join-form_{{i}}">
                             <div class="modal-body">
-                                <p id="exampleModalText_{{i}}">Please write your username below.</p>
-                                <input type="text" class="form-control" placeholder="Username" aria-label="Username" id="username_{{i}}" name="username">
-                                <input type="hidden" name="game_id" id="game_id_{{i}}" value="game_{{i}}">
+                                <p id="joinModalText_{{i}}">Please write your username below.</p>
+                                <input type="text" class="form-control" placeholder="Username" aria-label="Username" id="username_{{i}}">
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -50,117 +47,87 @@
                 document.getElementById('join-form_{{i}}').addEventListener('submit', function (e) {
                     e.preventDefault();
                     var username = document.getElementById('username_{{i}}').value;
-                    var game_id = document.getElementById('game_id_{{i}}').value;
+                    var game_id = {{i}}
                     fetch(`/api/get_token?username=${username}&game_id=${game_id}`)
                         .then(response => response.json())
                         .then(data => {
                             var token = data.token;
                             localStorage.setItem('token_{{i}}', token);
                             var join_button = document.getElementById('join_button_{{i}}');
-                            join_button.classList.add('invisible');
+                            join_button.classList.toggle('invisible');
                             socket.emit('join_queue', {
                                 username: username,
                                 game_id: game_id,
                                 token: token
                             });
-                            var modal = bootstrap.Modal.getInstance(document.getElementById('exampleModal_{{i}}'));
+                            var modal = bootstrap.Modal.getInstance(document.getElementById('joinModal_{{i}}'));
                             modal.hide();
                         })
                         .catch(error => {
-                            var modalText = document.getElementById('exampleModalText_{{i}}');
+                            var modalText = document.getElementById('joinModalText_{{i}}');
                             modalText.textContent = 'Invalid Username!';
                             modalText.classList.add("text-danger-emphasis");
                             console.error('Error fetching token:', error);
                         });
                 });
                 document.addEventListener("DOMContentLoaded", function() {
-                        const queueElement = document.getElementById('queue_{{i}}');
-                        queueElement.addEventListener('click', function(event) {
-                            if (event.target && event.target.classList.contains('delete-btn')) {
-                                const listItem = event.target.closest('li');
-                                const username = listItem.getAttribute('username');
-                                const game_id = 'game_{{i}}'
-                                const op_code = localStorage.getItem('operator_code');
-                                console.log('Username:', username);
-                                console.log('Game ID:', game_id);
-                                socket.emit('remove_user', {
-                                    username: username,
-                                    game_id: game_id,
-                                    token: localStorage.getItem('token_{{i}}'),
-                                    operator_code: op_code
-                                });
-                                var join_button = document.getElementById('join_button_{{i}}');
-                                join_button.classList.remove('invisible');
-                            }
-                        });
+                    const queueElement = document.getElementById('queue_{{i}}');
+                    queueElement.addEventListener('click', function(event) {
+                        if (event.target && event.target.classList.contains('delete-btn')) {
+                            const listItem = event.target.closest('li');
+                            const username = listItem.getAttribute('username');
+                            const op_code = localStorage.getItem('operator_code');
+                            socket.emit('remove_user', {
+                                username: username,
+                                game_id: {{i}},
+                                token: localStorage.getItem('token_{{i}}'),
+                                operator_code: op_code
+                            });
+                            var join_button = document.getElementById('join_button_{{i}}');
+                            join_button.classList.toggle('invisible');
+                        }
                     });
+                });
                 socket.on('queue_update', function(data) {
                     if (data.game_id == {{i}}) {
                         var queueElement = document.getElementById('queue_{{i}}');
                         queueElement.innerHTML = '';
                         data.queue.forEach(function(user) {
-                            var li = document.createElement('li');
-                            li.classList.add("list-group-item", "d-flex", "align-items-center")
-                            li.setAttribute("username", user.username);
-                            li.setAttribute("game_id", "game_{{i}}");
-
-                            var blank_col = document.createElement('span');
-                            blank_col.classList.add("col");
-                            li.appendChild(blank_col);
-                            var username = document.createElement('span');
-                            username.classList.add("col");
-                            username.textContent = user.username;
-                            li.appendChild(username);
-
-                            var spanDelete = document.createElement('span');
-                            spanDelete.classList.add("col", "d-flex", "justify-content-end");
-                            var deleteButton = document.createElement('button');
-                            deleteButton.classList.add("btn", "btn-danger", "btn-sm", "delete-btn");
-                            deleteButton.setAttribute("id", "deleteBtn");
-                            deleteButton.textContent = 'Remove';
-                            var join_button = document.getElementById('join_button_{{i}}');
-                            if (localStorage.getItem('token_{{i}}') == user.token) {
-                                spanDelete.classList.add("visible");
-                                join_button.classList.add('invisible');
-                            } else {
-                                spanDelete.classList.add("invisible");
-                                join_button.classList.add('visible');
-                            }
-                            spanDelete.appendChild(deleteButton);
-                            li.appendChild(spanDelete);
+                            var isCurrentUser = localStorage.getItem("token_{{i}}") == user.token;
+                            var join_button = document.getElementById("join_button_{{i}}");
+                            join_button.classList.toggle("invisible", isCurrentUser);
+                            var li = createListItem(user, join_button);
                             queueElement.appendChild(li);
-
                             var countdown = document.createElement('div');
                             countdown.id = 'countdown_{{i}}';
                             queueElement.appendChild(countdown);
+                            var deleteButton = document.getElementById("deleteBtn_" + user.username);
+                            deleteButton.classList.toggle("invisible", !isCurrentUser);
                         });
                     }
                 });
                 socket.on('timer_update', function(data) {
-                    if (data.game_id == {{i}}) {
-                        var countdownDisplay = document.getElementById('countdown_{{i}}');
-                        if ((data.time_left > 0) && (data.time_left != null) && (countdownDisplay != null)) {
-                            countdownDisplay.textContent = `Time left: ${data.time_left} seconds`;
-                        }
+                    var countdownDisplay = document.getElementById('countdown_' + data.game_id);
+                    if ((data.time_left > 0) && (data.time_left != null) && (countdownDisplay != null)) {
+                        countdownDisplay.textContent = `Time left: ${formatTime(data.time_left)}`;
                     }
                 });
                 socket.on('user_removed', function(data) {
-                    if (data.user) {
+                    if (data.token == localStorage.getItem("token_{{i}}")) {
                         var join_button = document.getElementById('join_button_' + data.game_id);
                         join_button.classList.remove('invisible');
                         vibrateDevice();
-                        setTimeout(function() {
-                                alert("You have been removed from the queue for game " + data.game_id + " because your time is up.");
+                        if (!data.operator) {
+                            setTimeout(function() {
+                                alert("Time is up! Head to the " + data.game_name + " machine to start your credit!");
                             }, 1000);
+                        } else {
+                            setTimeout(function() {
+                                alert("An operator removed you from the " + data.game_name + " queue.");
+                            }, 1000);
+                        }
                     }
                 });
-                function vibrateDevice() {
-                    if ("vibrate" in navigator) {
-                      navigator.vibrate(5000);  // Vibrates for 500ms
-                    } else {
-                      console.log("Vibration not supported.");
-                    }
-                  }
             </script>
         {% endfor %}
     </div>
@@ -187,22 +154,21 @@
         </div>
         <script>
             document.getElementById('op-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const operatorCode = document.getElementById('op-code').value;
-            console.log("Operator Code:", operatorCode);
-            fetch(`/api/operator?operator_code=${operatorCode}`)
-                .then(response => response.json())
-                .then(data => {
-                    var token = data.token;
-                    localStorage.setItem('operator_code', token);
-                    const modalElement = document.getElementById('opModal');
-                    const modal = bootstrap.Modal.getInstance(modalElement);
-                    modal.hide();
-                    const deleteBtns = document.querySelectorAll('#deleteBtn');
-                    deleteBtns.forEach(function(deleteBtn) {
-                        deleteBtn.classList.add("visible");
-                    });
-                })
+                event.preventDefault();
+                const operatorCode = document.getElementById('op-code').value;
+                fetch(`/api/operator?operator_code=${operatorCode}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        var token = data.token;
+                        localStorage.setItem('operator_code', token);
+                        const modalElement = document.getElementById('opModal');
+                        const modal = bootstrap.Modal.getInstance(modalElement);
+                        modal.hide();
+                        const deleteBtns = document.getElementsByClassName('delete-btn');
+                        Array.from(deleteBtns).forEach(function(deleteBtn) {
+                            deleteBtn.classList.toggle("invisible");
+                        });
+                    })
                 .catch(error => {
                     var opModalText = document.getElementById('opModalLabel');
                     opModalText.textContent = 'Incorrect Code!';
@@ -211,5 +177,6 @@
                 });
             });
         </script>
+        <script src="{{url_for('static', filename='main.js')}}"></script>
     </div>
 {% endblock %}
