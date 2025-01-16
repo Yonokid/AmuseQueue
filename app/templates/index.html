@@ -46,33 +46,33 @@
                 </div>
             </div>
             <script>
-            var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
-            document.getElementById('join-form_{{i}}').addEventListener('submit', function (e) {
-                e.preventDefault();
-                var username = document.getElementById('username_{{i}}').value;
-                var game_id = document.getElementById('game_id_{{i}}').value;
-                fetch(`/get_token?username=${username}&game_id=${game_id}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        var token = data.token;
-                        localStorage.setItem('token_{{i}}', token);
-                        var join_button = document.getElementById('join_button_{{i}}');
-                        join_button.classList.add('invisible');
-                        socket.emit('join_queue', {
-                            username: username,
-                            game_id: game_id,
-                            token: token
+                var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+                document.getElementById('join-form_{{i}}').addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    var username = document.getElementById('username_{{i}}').value;
+                    var game_id = document.getElementById('game_id_{{i}}').value;
+                    fetch(`/api/get_token?username=${username}&game_id=${game_id}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            var token = data.token;
+                            localStorage.setItem('token_{{i}}', token);
+                            var join_button = document.getElementById('join_button_{{i}}');
+                            join_button.classList.add('invisible');
+                            socket.emit('join_queue', {
+                                username: username,
+                                game_id: game_id,
+                                token: token
+                            });
+                            var modal = bootstrap.Modal.getInstance(document.getElementById('exampleModal_{{i}}'));
+                            modal.hide();
+                        })
+                        .catch(error => {
+                            var modalText = document.getElementById('exampleModalText_{{i}}');
+                            modalText.textContent = 'Invalid Username!';
+                            modalText.classList.add("text-danger-emphasis");
+                            console.error('Error fetching token:', error);
                         });
-                        var modal = bootstrap.Modal.getInstance(document.getElementById('exampleModal_{{i}}'));
-                        modal.hide();
-                    })
-                    .catch(error => {
-                        var modalText = document.getElementById('exampleModalText_{{i}}');
-                        modalText.textContent = 'Invalid Username!';
-                        modalText.classList.add("text-danger-emphasis");
-                        console.error('Error fetching token:', error);
-                    });
-            });
+                });
                 document.addEventListener("DOMContentLoaded", function() {
                         const queueElement = document.getElementById('queue_{{i}}');
                         queueElement.addEventListener('click', function(event) {
@@ -80,12 +80,14 @@
                                 const listItem = event.target.closest('li');
                                 const username = listItem.getAttribute('username');
                                 const game_id = 'game_{{i}}'
+                                const op_code = localStorage.getItem('operator_code');
                                 console.log('Username:', username);
                                 console.log('Game ID:', game_id);
                                 socket.emit('remove_user', {
                                     username: username,
                                     game_id: game_id,
-                                    token: localStorage.getItem('token_{{i}}')
+                                    token: localStorage.getItem('token_{{i}}'),
+                                    operator_code: op_code
                                 });
                                 var join_button = document.getElementById('join_button_{{i}}');
                                 join_button.classList.remove('invisible');
@@ -114,9 +116,10 @@
                             spanDelete.classList.add("col", "d-flex", "justify-content-end");
                             var deleteButton = document.createElement('button');
                             deleteButton.classList.add("btn", "btn-danger", "btn-sm", "delete-btn");
+                            deleteButton.setAttribute("id", "deleteBtn");
                             deleteButton.textContent = 'Remove';
                             var join_button = document.getElementById('join_button_{{i}}');
-                            if (data.operator || localStorage.getItem('token_{{i}}') == user.token) {
+                            if (localStorage.getItem('token_{{i}}') == user.token) {
                                 spanDelete.classList.add("visible");
                                 join_button.classList.add('invisible');
                             } else {
@@ -172,7 +175,7 @@
                     </div>
                     <form id="op-form">
                         <div class="modal-body">
-                            <input type="text" class="form-control" placeholder="123456789" aria-label="Operator Code" id="op-code">
+                            <input type="text" class="form-control" aria-label="Operator Code" id="op-code">
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -183,17 +186,30 @@
             </div>
         </div>
         <script>
-        document.getElementById('op-form').addEventListener('submit', function(event) {
+            document.getElementById('op-form').addEventListener('submit', function(event) {
             event.preventDefault();
             const operatorCode = document.getElementById('op-code').value;
             console.log("Operator Code:", operatorCode);
-            socket.emit('operator_code', {
-                operator_code: operatorCode
+            fetch(`/api/operator?operator_code=${operatorCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    var token = data.token;
+                    localStorage.setItem('operator_code', token);
+                    const modalElement = document.getElementById('opModal');
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    modal.hide();
+                    const deleteBtns = document.querySelectorAll('#deleteBtn');
+                    deleteBtns.forEach(function(deleteBtn) {
+                        deleteBtn.classList.add("visible");
+                    });
+                })
+                .catch(error => {
+                    var opModalText = document.getElementById('opModalLabel');
+                    opModalText.textContent = 'Incorrect Code!';
+                    opModalText.classList.add("text-danger-emphasis");
+                    console.error('Error fetching token:', error);
+                });
             });
-            const modalElement = document.getElementById('opModal');
-            const modal = bootstrap.Modal.getInstance(modalElement);
-            modal.hide();
-        });
         </script>
     </div>
 {% endblock %}

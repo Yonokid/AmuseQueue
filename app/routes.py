@@ -21,6 +21,7 @@ for queue in queues:
     queue['timer_thread'] = None
     queue['timer_running'] = False
 user_socket_ids = {}
+current_op_code = []
 
 
 def randomize_string(input_string):
@@ -61,7 +62,16 @@ def handle_remove_user(data):
     game_index = int(game_id.split('_')[1])
     username = data.get('username')
     token = data.get('token')
-    removed_user = queues[game_index]['queue'].remove({'username': username, 'token': token})
+    operator_code = data.get('operator_code')
+    if operator_code == current_op_code[len(current_op_code)-1]:
+        for user in queues[game_index]['queue']:
+            if user['username'] == username:
+                removed_user = queues[game_index]['queue'].remove(user)
+                break
+            else:
+                removed_user = None
+    else:
+        removed_user = queues[game_index]['queue'].remove({'username': username, 'token': token})
     print(f"User {removed_user} was removed from the queue for game {game_id}")
     if len(queues[game_index]) == 0:
         queues[game_index]['timer_running'] = False
@@ -74,18 +84,6 @@ def handle_remove_user(data):
         'queue': queues[game_index]['queue'],
         'wait_time': queues[game_index]['wait_time'],
     })
-
-@socketio.on('operator_code')
-def handle_operator_access(data):
-    operator_code = data.get('operator_code')
-    if operator_code == config_info['store']['operator_code']:
-        for i in range(len(queues)):
-            emit('queue_update', {
-                'game_id': i,
-                'queue': queues[i]['queue'],
-                'wait_time': queues[i]['wait_time'],
-                'operator': True
-            })
 
 @socketio.on('join_queue')
 def handle_join_queue(data):
@@ -130,7 +128,7 @@ def init_routes(app):
     def join():
         return redirect(url_for('index'))
 
-    @app.route('/get_token', methods=['GET'])
+    @app.route('/api/get_token', methods=['GET'])
     def get_token():
         username = request.args.get('username')
         game_id = request.args.get('game_id')
@@ -145,3 +143,11 @@ def init_routes(app):
         key = randomize_string(app.config['SECRET_KEY'])
         token = jwt.encode({'username': username}, key, algorithm='HS256')
         return jsonify({f'token': token})
+    @app.route('/api/operator', methods=['GET'])
+    def operator():
+        operator_code = request.args.get('operator_code')
+        if str(operator_code) == str(config_info['store']['operator_code']):
+            key = randomize_string(app.config['SECRET_KEY'])
+            token = jwt.encode({'operator_code': operator_code}, key, algorithm='HS256')
+            current_op_code.append(token)
+            return jsonify({'token': token})
