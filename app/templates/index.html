@@ -115,11 +115,13 @@
                             var deleteButton = document.createElement('button');
                             deleteButton.classList.add("btn", "btn-danger", "btn-sm", "delete-btn");
                             deleteButton.textContent = 'Remove';
-                            console.log(data);
+                            var join_button = document.getElementById('join_button_{{i}}');
                             if (data.operator || localStorage.getItem('token_{{i}}') == user.token) {
                                 spanDelete.classList.add("visible");
+                                join_button.classList.add('invisible');
                             } else {
                                 spanDelete.classList.add("invisible");
+                                join_button.classList.add('visible');
                             }
                             spanDelete.appendChild(deleteButton);
                             li.appendChild(spanDelete);
