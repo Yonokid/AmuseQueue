@@ -2,6 +2,7 @@ from flask import render_template, url_for, redirect, request
 from . import socketio
 import tomllib
 import time
+import uuid
 import threading
 from flask_socketio import emit, join_room, leave_room
 
@@ -55,7 +56,7 @@ def handle_remove_user(data):
         return
     removed_user = queues[game_index]['queue'].remove(username)
     print(f"User {removed_user} was removed from the queue for game {game_id}")
-    if len(queues) == 0:
+    if len(queues[game_id]) == 0:
         queues[game_id]['timer_running'] = False
         queues[game_id]['timer_thread'] = None
     socketio.emit('queue_update', {

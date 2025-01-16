@@ -51,7 +51,7 @@
                         e.preventDefault();
                         var username = document.getElementById('username_{{i}}').value;
                         var game_id = document.getElementById('game_id_{{i}}').value;
-                        localStorage.setItem('username', username);
+                        localStorage.setItem('token', username);
                         socket.emit('join_queue', {
                             username: username,
                             game_id: game_id
@@ -71,7 +71,7 @@
                                 socket.emit('remove_user', {
                                     username: username,
                                     game_id: game_id,
-                                    token: localStorage.getItem('username', username)
+                                    token: localStorage.getItem('token', username)
                                 });
                             }
                         });
