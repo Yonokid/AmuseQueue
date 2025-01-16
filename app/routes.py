@@ -66,10 +66,13 @@ def handle_remove_user(data):
     if operator_code == current_op_code[len(current_op_code)-1]:
         for user in queues[game_index]['queue']:
             if user['username'] == username:
-                removed_user = queues[game_index]['queue'].remove(user)
+                removed_user = user['username']
+                queues[game_index]['queue'].remove(user)
                 break
             else:
                 removed_user = None
+        user_socket_id = user_socket_ids.get(removed_user)
+        socketio.emit('user_removed', {'game_id': game_id, 'user': removed_user, 'game_name': queues[game_index]['name']}, room=user_socket_id)
     else:
         removed_user = queues[game_index]['queue'].remove({'username': username, 'token': token})
     print(f"User {removed_user} was removed from the queue for game {game_id}")
