@@ -5,7 +5,7 @@ operator_code = 12345678
 [game_1]
 name = 'maimai DX'
 #wait_time = 963
-wait_time = 25
+wait_time = 100
 
 [game_2]
 name = 'CHUNITHM'
