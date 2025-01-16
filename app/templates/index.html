@@ -17,8 +17,6 @@
                     <h4>Current Queue:</h4>
                     <ul id="queue_{{i}}" class="list-group">
                         {% for user in queue['queue'] %}
-                            <li class="list-group-item text-wrap">{{ user }}</li>
-                            <div id="countdown_{{i}}"></div>
                         {% endfor %}
                     </ul>
                 </div>
@@ -28,23 +26,23 @@
             </div>
             <div class="modal fade" id="exampleModal_{{i}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="exampleModalLabel">Join {{ queue['name'] }} Queue</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="exampleModalLabel">Join {{ queue['name'] }} Queue</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form id="join-form_{{i}}">
+                            <div class="modal-body">
+                                <p>Please write your username below.</p>
+                                <input type="text" class="form-control" placeholder="Username" aria-label="Username" id="username_{{i}}" name="username">
+                                <input type="hidden" name="game_id" id="game_id_{{i}}" value="game_{{i}}">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Join</button>
+                            </div>
+                        </form>
                     </div>
-                    <form id="join-form_{{i}}">
-                        <div class="modal-body">
-                            <p>Please write your username below.</p>
-                            <input type="text" class="form-control" placeholder="Username" aria-label="Username" id="username_{{i}}" name="username">
-                            <input type="hidden" name="game_id" id="game_id_{{i}}" value="game_{{i}}">
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Join</button>
-                        </div>
-                    </form>
-                </div>
                 </div>
             </div>
             <script>
@@ -53,6 +51,7 @@
                         e.preventDefault();
                         var username = document.getElementById('username_{{i}}').value;
                         var game_id = document.getElementById('game_id_{{i}}').value;
+                        localStorage.setItem('username', username);
                         socket.emit('join_queue', {
                             username: username,
                             game_id: game_id
@@ -60,17 +59,58 @@
                         var modal = bootstrap.Modal.getInstance(document.getElementById('exampleModal_{{i}}'));
                         modal.hide();
                     });
+                document.addEventListener("DOMContentLoaded", function() {
+                        const queueElement = document.getElementById('queue_{{i}}');
+                        queueElement.addEventListener('click', function(event) {
+                            if (event.target && event.target.classList.contains('delete-btn')) {
+                                const listItem = event.target.closest('li');
+                                const username = listItem.getAttribute('username');
+                                const game_id = 'game_{{i}}'
+                                console.log('Username:', username);
+                                console.log('Game ID:', game_id);
+                                socket.emit('remove_user', {
+                                    username: username,
+                                    game_id: game_id,
+                                    token: localStorage.getItem('username', username)
+                                });
+                            }
+                        });
+                    });
                 socket.on('queue_update', function(data) {
                     if (data.game_id == {{i}}) {
                         var queueElement = document.getElementById('queue_{{i}}');
                         queueElement.innerHTML = '';
                         data.queue.forEach(function(user) {
                             var li = document.createElement('li');
-                            li.classList.add("list-group-item")
-                            li.textContent = user;
-                            var countdown = document.createElement('div');
-                            countdown.id = 'countdown_{{i}}'
+                            li.classList.add("list-group-item", "d-flex", "align-items-center")
+                            li.setAttribute("username", user);
+                            li.setAttribute("game_id", "game_{{i}}");
+
+                            var blank_col = document.createElement('span');
+                            blank_col.classList.add("col");
+                            li.appendChild(blank_col);
+                            var username = document.createElement('span');
+                            username.classList.add("col");
+                            username.textContent = user;
+                            li.appendChild(username);
+
+                            var spanDelete = document.createElement('span');
+                            spanDelete.classList.add("col", "d-flex", "justify-content-end");
+                            var deleteButton = document.createElement('button');
+                            deleteButton.classList.add("btn", "btn-danger", "btn-sm", "delete-btn");
+                            deleteButton.textContent = 'Remove';
+                            console.log(data);
+                            if (data.operator || localStorage.getItem('username') == user) {
+                                spanDelete.classList.add("visible");
+                            } else {
+                                spanDelete.classList.add("invisible");
+                            }
+                            spanDelete.appendChild(deleteButton);
+                            li.appendChild(spanDelete);
                             queueElement.appendChild(li);
+
+                            var countdown = document.createElement('div');
+                            countdown.id = 'countdown_{{i}}';
                             queueElement.appendChild(countdown);
                         });
                     }
@@ -78,10 +118,8 @@
                 socket.on('timer_update', function(data) {
                     if (data.game_id == {{i}}) {
                         var countdownDisplay = document.getElementById('countdown_{{i}}');
-                        if (data.time_left > 0) {
+                        if ((data.time_left > 0) && (data.time_left != null) && (countdownDisplay != null)) {
                             countdownDisplay.textContent = `Time left: ${data.time_left} seconds`;
-                        } else {
-                            countdownDisplay.textContent = "Time's up!";
                         }
                     }
                 });
@@ -102,5 +140,40 @@
                   }
             </script>
         {% endfor %}
+    </div>
+    <div>
+        <button type="btn" data-bs-toggle="modal" data-bs-target="#opModal" class="btn btn-outline-primary fixed-bottom-right" id="op-button" style="position: fixed; bottom: 20px; right: 20px;">Operator Access</button>
+        <div class="modal fade" id="opModal" tabindex="-1" aria-labelledby="opModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="opModalLabel">Input Operator Code</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="op-form">
+                        <div class="modal-body">
+                            <input type="text" class="form-control" placeholder="123456789" aria-label="Operator Code" id="op-code">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Enter</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <script>
+        document.getElementById('op-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const operatorCode = document.getElementById('op-code').value;
+            console.log("Operator Code:", operatorCode);
+            socket.emit('operator_code', {
+                operator_code: operatorCode
+            });
+            const modalElement = document.getElementById('opModal');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            modal.hide();
+        });
+        </script>
     </div>
 {% endblock %}
