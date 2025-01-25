@@ -135,6 +135,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
       socket.on("user_removed", function (data) {
         if (data.token == localStorage.getItem("token_" + gameId)) {
+          localStorage.removeItem("token_" + gameId);
           var join_button = document.getElementById(
             "join_button_" + data.game_id,
           );

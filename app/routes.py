@@ -1,9 +1,18 @@
-from flask import render_template, url_for, redirect, request, jsonify
-from flask_socketio import SocketIO, emit, join_room, leave_room
-from . import socketio
-from app.helpers import load_config, create_queues, randomize_string, get_random_token, username_filtered, verify_operator_code
-import time
 import threading
+import time
+
+from flask import jsonify, render_template, request
+from flask_socketio import emit
+
+from app.helpers import (
+    create_queues,
+    get_random_token,
+    load_config,
+    username_filtered,
+    verify_operator_code,
+)
+
+from . import socketio
 
 config_info = load_config()
 store_name = config_info['store']['store_name']
@@ -29,9 +38,10 @@ def timer(queue, game_id):
         time_left -= 1
     queue['timer_running'] = False
     queue['timer_thread'] = None
-
+    print(queue)
     removed_user = queue['queue'].pop(0)
     token = removed_user['token']
+
     socketio.emit('user_removed', {'game_id': game_id, 'user': removed_user, 'game_name': queue['name'], 'token': token})
 
     socketio.emit('queue_update', {'game_id': game_id, 'queue': queue['queue'], 'wait_time': queue['wait_time']})
@@ -100,14 +110,14 @@ def init_routes(app):
     def get_token():
         username = str(request.args.get('username'))
         game_id = request.args.get('game_id')
-        if game_id != None:
+        if game_id is not None:
             game_id = int(game_id)
         else:
             raise Exception('Game ID missing')
         if username_filtered(username, queues[game_id]['queue']):
             return 'Username filtered'
         token = get_random_token(username, app.config['SECRET_KEY'])
-        return jsonify({f'token': token})
+        return jsonify({'token': token})
 
     @app.route('/api/operator', methods=['GET'])
     def operator():

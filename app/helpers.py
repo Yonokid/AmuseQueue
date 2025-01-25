@@ -1,7 +1,9 @@
 import math
-import tomllib
 import random
+
 import jwt
+import tomllib
+
 
 def format_time(seconds: int) -> str:
     mins = math.floor(seconds / 60)

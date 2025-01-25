@@ -1,8 +1,10 @@
-from app import create_app, get_socket
-from app.routes import init_routes
-from app.helpers import format_time
-from dotenv import load_dotenv
 import os
+
+from dotenv import load_dotenv
+
+from app import create_app, get_socket
+from app.helpers import format_time
+from app.routes import init_routes
 
 load_dotenv()
 app = create_app()
