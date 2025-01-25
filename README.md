@@ -1,6 +1,6 @@
-<h1 align="center" id="title">AmuseQueue</h1>
+<p align="center"><img src="https://socialify.git.ci/Yonokid/AmuseQueue/image?language=1&name=1&owner=1&pattern=Transparent&stargazers=1&theme=Dark" style="width: 50%; height=50%;"></p>
 
-<p id="description">A live queue interface for arcade machines.</p>
+<p align="center" id="description">A live queue interface for arcade machines.</p>
 
 <h2>Demo</h2>
 
