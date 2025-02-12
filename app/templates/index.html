@@ -4,6 +4,11 @@
         <div class="container p-4 text-center">
             <h1 class="text-center">{{ store['store_name'] }} Queue</h1>
         </div>
+            {% if view_only %}
+            <div class="container p-1 text-center">
+                <img style="width: 35%; height: 35%;" src="/qrcode">
+            </div>
+            {% endif %}
         {% for i in range(queue_list|length) %}
             {% set queue = queue_list[i] %}
             <div class="container md-4 p-2 my-4 rounded bg-body-secondary text-center">
@@ -18,9 +23,11 @@
                     <ul id="queue_{{i}}" class="list-group">
                     </ul>
                 </div>
-                <div>
-                    <button type="button" id="join_button_{{i}}" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#joinModal_{{i}}">Join Queue</button>
-                </div>
+                {% if not view_only %}
+                    <div>
+                        <button type="button" id="join_button_{{i}}" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#joinModal_{{i}}">Join Queue</button>
+                    </div>
+                {% endif %}
             </div>
             <div class="modal fade" id="joinModal_{{i}}" tabindex="-1" aria-labelledby="joinModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
@@ -45,7 +52,9 @@
         {% endfor %}
     </div>
     <div>
-        <button type="btn" data-bs-toggle="modal" data-bs-target="#opModal" class="btn btn-outline-primary fixed-bottom-right" id="op-button" style="position: fixed; bottom: 20px; right: 20px;">Operator Access</button>
+        {% if not view_only %}
+            <button type="btn" data-bs-toggle="modal" data-bs-target="#opModal" class="btn btn-outline-primary fixed-bottom-right" id="op-button" style="position: fixed; bottom: 20px; right: 20px;">Operator Access</button>
+        {% endif %}
         <div class="modal fade" id="opModal" tabindex="-1" aria-labelledby="opModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">

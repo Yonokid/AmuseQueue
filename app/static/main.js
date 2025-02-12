@@ -108,8 +108,10 @@ document.addEventListener("DOMContentLoaded", function () {
             var isCurrentUser =
               localStorage.getItem("token_" + gameId) == user.token;
             var join_button = document.getElementById("join_button_" + gameId);
-            join_button.classList.toggle("invisible", isCurrentUser);
-            var li = createListItem(user, join_button);
+            if (join_button) {
+              join_button.classList.toggle("invisible", isCurrentUser);
+            }
+            var li = createListItem(user);
             queueElement.appendChild(li);
             var countdown = document.createElement("div");
             countdown.id = "countdown_" + gameId;

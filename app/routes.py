@@ -1,7 +1,9 @@
 import threading
 import time
+from io import BytesIO
 
-from flask import jsonify, render_template, request
+import qrcode
+from flask import Response, jsonify, render_template, request
 from flask_socketio import emit
 
 from app.helpers import (
@@ -38,7 +40,6 @@ def timer(queue, game_id):
         time_left -= 1
     queue['timer_running'] = False
     queue['timer_thread'] = None
-    print(queue)
     removed_user = queue['queue'].pop(0)
     token = removed_user['token']
 
@@ -104,7 +105,8 @@ def init_routes(app):
     @app.route('/')
     @app.route('/index')
     def index():
-        return render_template('index.html', title=f'{store_name} Queue', queue_list=queues, store=config_info['store'])
+        view = request.args.get('view')
+        return render_template('index.html', title=f'{store_name} Queue', queue_list=queues, store=config_info['store'], view_only=view)
 
     @app.route('/api/get_token', methods=['GET'])
     def get_token():
@@ -128,3 +130,12 @@ def init_routes(app):
         token = get_random_token(operator_code, app.config['SECRET_KEY'])
         current_op_code = token
         return jsonify({'token': token})
+
+    @app.route('/qrcode')
+    def generate_qrcode():
+        url = request.url_root
+        qr_code = qrcode.make(url)
+        buffer = BytesIO()
+        qr_code.save(buffer, 'PNG')
+        buffer.seek(0)
+        return Response(buffer, mimetype="image/png")
