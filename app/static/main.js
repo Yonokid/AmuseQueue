@@ -187,10 +187,11 @@ document.addEventListener("DOMContentLoaded", function () {
             socket.on("user_removed", function (data) {
                 if (
                     data.token == localStorage.getItem("token_" + gameId) ||
-                    data.token == localStorage.getItem("token_" + user.username)
+                    data.token ==
+                        localStorage.getItem("token_" + data.user.username)
                 ) {
                     localStorage.removeItem("token_" + gameId);
-                    localStorage.removeItem("token_" + user.username);
+                    localStorage.removeItem("token_" + data.user.username);
                     var join_button = document.getElementById(
                         "join_button_" + data.game_id,
                     );
