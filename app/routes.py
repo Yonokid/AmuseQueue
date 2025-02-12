@@ -21,34 +21,42 @@ store_name = config_info['store']['store_name']
 queues = create_queues(config_info)
 current_op_code = ''
 
-def start_timer(queue, game_id):
+def start_timer(queue, game_id, timer_type='wait', time_left=None):
     if not queue['timer_running']:
-        queue['timer_thread'] = threading.Thread(target=timer, args=(queues[game_id], game_id,))
+        if timer_type == 'wait':
+            time_left = queue['wait_time']
+        elif timer_type == 'confirm':
+            time_left = queue['confirm_time']
+
+        queue['timer_thread'] = threading.Thread(target=timer, args=(queue, game_id, timer_type, time_left))
         queue['timer_thread'].start()
 
-def timer(queue, game_id):
+def timer(queue, game_id, timer_type, time_left):
     queue['timer_running'] = True
 
-    time_left = queue['wait_time']
     while time_left > 0:
-        socketio.emit('timer_update', {'game_id': game_id, 'time_left': time_left})
-        if not queue:
+        if len(queue['queue']) == 0:
             queue['timer_running'] = False
             queue['timer_thread'] = None
             return
+        socketio.emit('timer_update', {'game_id': game_id, 'time_left': time_left})
         time.sleep(1)
         time_left -= 1
+
     queue['timer_running'] = False
     queue['timer_thread'] = None
-    removed_user = queue['queue'].pop(0)
-    token = removed_user['token']
 
-    socketio.emit('user_removed', {'game_id': game_id, 'user': removed_user, 'game_name': queue['name'], 'token': token})
-
-    socketio.emit('queue_update', {'game_id': game_id, 'queue': queue['queue'], 'wait_time': queue['wait_time']})
-
-    if queue['queue']:
-        start_timer(queue, game_id)
+    if timer_type == 'wait':
+        start_timer(queue, game_id, timer_type='confirm')
+        print(queue)
+        socketio.emit('user_confirm', {'game_id': game_id, 'user': queue['queue'][0], 'game_name': queue['name'], 'token': queue['queue'][0]['token']})
+    if timer_type == 'confirm':
+        removed_user = queue['queue'].pop(0)
+        token = removed_user['token']
+        socketio.emit('user_removed', {'game_id': game_id, 'user': removed_user, 'game_name': queue['name'], 'token': token})
+        if queue['queue']:
+            start_timer(queue, game_id, timer_type='wait')
+        socketio.emit('queue_update', {'game_id': game_id, 'queue': queue['queue'], 'wait_time': queue['wait_time']})
 
 @socketio.on('remove_user')
 def handle_remove_user(data):
