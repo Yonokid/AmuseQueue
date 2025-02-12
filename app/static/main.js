@@ -201,6 +201,14 @@ document.addEventListener("DOMContentLoaded", function () {
                                     " queue.",
                             );
                         }, 1000);
+                    } else if (data.timed_out) {
+                        setTimeout(function () {
+                            alert(
+                                "You were removed from the " +
+                                    data.game_name +
+                                    " queue as you did not confirm your spot.",
+                            );
+                        }, 1000);
                     }
                 }
             });

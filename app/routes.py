@@ -53,7 +53,7 @@ def timer(queue, game_id, timer_type, time_left):
     if timer_type == 'confirm':
         removed_user = queue['queue'].pop(0)
         token = removed_user['token']
-        socketio.emit('user_removed', {'game_id': game_id, 'user': removed_user, 'game_name': queue['name'], 'token': token})
+        socketio.emit('user_removed', {'game_id': game_id, 'user': removed_user, 'game_name': queue['name'], 'token': token, 'timed_out': True})
         if queue['queue']:
             start_timer(queue, game_id, timer_type='wait')
         socketio.emit('queue_update', {'game_id': game_id, 'queue': queue['queue'], 'wait_time': queue['wait_time']})
