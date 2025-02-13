@@ -188,10 +188,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (
                     data.token == localStorage.getItem("token_" + gameId) ||
                     data.token ==
-                        localStorage.getItem("token_" + data.user.username)
+                        localStorage.getItem("token_" + gameId + gameId)
                 ) {
                     localStorage.removeItem("token_" + gameId);
-                    localStorage.removeItem("token_" + data.user.username);
+                    localStorage.removeItem("token_" + gameId + gameId);
                     var join_button = document.getElementById(
                         "join_button_" + data.game_id,
                     );
@@ -219,7 +219,10 @@ document.addEventListener("DOMContentLoaded", function () {
             socket.on("user_confirm", function (data) {
                 if (data.token == localStorage.getItem("token_" + gameId)) {
                     var user = data.user;
-                    localStorage.setItem("token_" + user.username, data.token);
+                    localStorage.setItem(
+                        "token_" + gameId + gameId,
+                        data.token,
+                    );
                     var isCurrentUser =
                         localStorage.getItem("token_" + gameId) == user.token;
                     localStorage.removeItem("token_" + gameId);
