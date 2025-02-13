@@ -46,16 +46,15 @@ def timer(queue, game_id, timer_type, time_left):
             start_timer(queue, game_id, timer_type='wait')
             return
         socketio.emit('timer_update', {'game_id': game_id, 'time_left': time_left})
+        current_len = len(queue['queue'])
         time.sleep(1)
         time_left -= 1
-        current_len = len(queue['queue'])
 
     queue['timer_running'] = False
     queue['timer_thread'] = None
 
     if timer_type == 'wait':
         start_timer(queue, game_id, timer_type='confirm')
-        print(queue)
         socketio.emit('user_confirm', {'game_id': game_id, 'user': queue['queue'][0], 'game_name': queue['name'], 'token': queue['queue'][0]['token']})
     if timer_type == 'confirm':
         removed_user = queue['queue'].pop(0)
@@ -73,6 +72,8 @@ def handle_remove_user(data):
     operator_code = data.get('operator_code')
     removed_user = None
     queue = queues[game_id]
+    if {'username': username, 'token': token} not in queue['queue']:
+        return
     if verify_operator_code(operator_code, current_op_code):
         for user in queue['queue']:
             if user['username'] == username:
