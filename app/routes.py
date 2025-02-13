@@ -72,8 +72,6 @@ def handle_remove_user(data):
     operator_code = data.get('operator_code')
     removed_user = None
     queue = queues[game_id]
-    if {'username': username, 'token': token} not in queue['queue']:
-        return
     if verify_operator_code(operator_code, current_op_code):
         for user in queue['queue']:
             if user['username'] == username:
@@ -83,6 +81,8 @@ def handle_remove_user(data):
                 break
         socketio.emit('user_removed', {'game_id': game_id, 'user': removed_user, 'game_name': queue['name'], 'operator': True, 'token': token})
     else:
+        if {'username': username, 'token': token} not in queue['queue']:
+            return
         removed_user = queue['queue'].remove({'username': username, 'token': token})
     if queue:
         start_timer(queue, game_id)
