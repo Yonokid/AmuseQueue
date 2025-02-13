@@ -68,7 +68,6 @@ def timer(queue, game_id, timer_type, time_left):
 def handle_remove_user(data):
     game_id = data.get('game_id')
     username = data.get('username')
-    token = data.get('token')
     operator_code = data.get('operator_code')
     removed_user = None
     queue = queues[game_id]
@@ -81,6 +80,7 @@ def handle_remove_user(data):
                 break
         socketio.emit('user_removed', {'game_id': game_id, 'user': removed_user, 'game_name': queue['name'], 'operator': True, 'token': token})
     else:
+        token = data.get('token')
         if {'username': username, 'token': token} not in queue['queue']:
             return
         removed_user = queue['queue'].remove({'username': username, 'token': token})

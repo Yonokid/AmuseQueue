@@ -190,8 +190,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     data.token ==
                         localStorage.getItem("token_" + gameId + gameId)
                 ) {
-                    localStorage.removeItem("token_" + gameId);
-                    localStorage.removeItem("token_" + gameId + gameId);
+                    localStorage.clear();
                     var join_button = document.getElementById(
                         "join_button_" + data.game_id,
                     );
