@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     socket.emit("remove_user", {
                         username: username,
                         game_id: gameId,
-                        token: localStorage.getItem("token_" + username),
+                        token: localStorage.getItem("token_" + gameId + gameId),
                         operator_code: op_code,
                     });
                     var join_button = document.getElementById(
