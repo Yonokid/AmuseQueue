@@ -34,14 +34,21 @@ def start_timer(queue, game_id, timer_type='wait', time_left=None):
 def timer(queue, game_id, timer_type, time_left):
     queue['timer_running'] = True
 
+    current_len = len(queue['queue'])
     while time_left > 0:
         if len(queue['queue']) == 0:
             queue['timer_running'] = False
             queue['timer_thread'] = None
             return
+        if timer_type == 'confirm' and len(queue['queue']) != current_len:
+            queue['timer_running'] = False
+            queue['timer_thread'] = None
+            start_timer(queue, game_id, timer_type='wait')
+            return
         socketio.emit('timer_update', {'game_id': game_id, 'time_left': time_left})
         time.sleep(1)
         time_left -= 1
+        current_len = len(queue['queue'])
 
     queue['timer_running'] = False
     queue['timer_thread'] = None
