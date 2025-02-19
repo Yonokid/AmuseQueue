@@ -10,15 +10,30 @@ function formatTime(seconds) {
     const remainingSeconds = seconds % 60;
     return `${minutes}min ${remainingSeconds}sec`;
 }
-function createListItem(user) {
+function createListItem(group) {
     var li = document.createElement("li");
     li.classList.add("list-group-item", "d-flex", "align-items-center");
-    li.setAttribute("username", user.username);
-    li.setAttribute("game_id", "game_{{i}}");
 
-    li.appendChild(createBlankColumn());
-    li.appendChild(createUsernameColumn(user.username));
-    li.appendChild(createDeleteButton(user));
+    group.forEach(function (user) {
+        var user_group = document.createElement("div");
+        user_group.classList.add(
+            "d-flex",
+            "align-items-center",
+            "w-100",
+            "gap-2",
+        ); // Ensures it fills the space
+        user_group.setAttribute("username", user.username);
+
+        user_group.appendChild(createBlankColumn());
+        user_group.appendChild(createUsernameColumn(user.username));
+        if (user.is_confirming) {
+            li.classList.add("bg-warning");
+            user_group.appendChild(createConfirmButton(user));
+        } else {
+            user_group.appendChild(createDeleteButton(user));
+        }
+        li.appendChild(user_group);
+    });
 
     return li;
 }
@@ -106,7 +121,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     event.target &&
                     event.target.classList.contains("delete-btn")
                 ) {
-                    const listItem = event.target.closest("li");
+                    const listItem = event.target.closest("div");
                     const username = listItem.getAttribute("username");
                     const op_code = localStorage.getItem("operator_code");
                     socket.emit("remove_user", {
@@ -115,6 +130,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         token: localStorage.getItem("token_" + gameId),
                         operator_code: op_code,
                     });
+                    localStorage.removeItem("token_" + gameId);
                     var join_button = document.getElementById(
                         "join_button_" + gameId,
                     );
@@ -126,52 +142,76 @@ document.addEventListener("DOMContentLoaded", function () {
                     event.target &&
                     event.target.classList.contains("confirm-btn")
                 ) {
-                    const listItem = event.target.closest("li");
+                    const listItem = event.target.closest("div");
                     const username = listItem.getAttribute("username");
                     const op_code = localStorage.getItem("operator_code");
                     socket.emit("remove_user", {
                         username: username,
                         game_id: gameId,
-                        token: localStorage.getItem("token_" + gameId + gameId),
+                        token: localStorage.getItem("token2_" + gameId),
                         operator_code: op_code,
                     });
+                    localStorage.removeItem("token2_" + gameId);
                     var join_button = document.getElementById(
                         "join_button_" + gameId,
                     );
-                    join_button.classList.toggle("invisible");
+                    join_button.classList.remove("invisible");
                 }
             });
             socket.on("queue_update", function (data) {
-                if (data.game_id == gameId) {
-                    queueElement.innerHTML = "";
-                    data.queue.forEach(function (user) {
-                        var isCurrentUser =
-                            localStorage.getItem("token_" + gameId) ==
-                            user.token;
-                        var join_button = document.getElementById(
+                if (data.game_id !== gameId) return;
+                queueElement.innerHTML = "";
+                const fragment = document.createDocumentFragment();
+                const userTokens = [
+                    localStorage.getItem("token_" + gameId),
+                    localStorage.getItem("token2_" + gameId),
+                ].filter(Boolean);
+                data.queue.forEach(function (group) {
+                    const listItem = createListItem(group);
+                    fragment.appendChild(listItem);
+
+                    fragment.querySelectorAll(".delete-btn").forEach((btn) => {
+                        btn.classList.toggle("invisible");
+                    });
+                    fragment.querySelectorAll(".confirm-btn").forEach((btn) => {
+                        btn.classList.toggle("invisible");
+                    });
+                    group.forEach(function (user) {
+                        const isCurrentUser = userTokens.includes(user.token);
+
+                        const joinButton = fragment.getElementById(
                             "join_button_" + gameId,
                         );
-                        if (join_button) {
-                            join_button.classList.toggle(
-                                "invisible",
-                                isCurrentUser,
-                            );
-                        }
-                        var li = createListItem(user);
-                        queueElement.appendChild(li);
-                        var countdown = document.createElement("div");
-                        countdown.id = "countdown_" + gameId;
-                        queueElement.appendChild(countdown);
-                        var deleteButton = document.getElementById(
+                        const deleteButton = fragment.getElementById(
                             "deleteBtn_" + user.username,
                         );
-                        deleteButton.classList.toggle(
-                            "invisible",
-                            !isCurrentUser,
+                        const confirmButton = fragment.getElementById(
+                            "confirmBtn_" + user.username,
                         );
+                        joinButton?.classList.toggle(
+                            "invisible",
+                            joinButton && (isCurrentUser || user.is_confirming),
+                        );
+                        if (deleteButton) {
+                            if (isCurrentUser && !user.is_confirming) {
+                                deleteButton.classList.remove("invisible");
+                            }
+                        }
+                        if (confirmButton) {
+                            if (isCurrentUser && user.is_confirming) {
+                                confirmButton.classList.remove("invisible");
+                            }
+                        }
                     });
-                }
+                });
+
+                queueElement.appendChild(fragment);
+
+                const countdown = document.createElement("div");
+                countdown.id = "countdown_" + gameId;
+                queueElement.appendChild(countdown);
             });
+
             socket.on("timer_update", function (data) {
                 var countdownDisplay = document.getElementById(
                     "countdown_" + data.game_id,
@@ -185,30 +225,25 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             });
             socket.on("user_removed", function (data) {
+                const user = JSON.parse(data.user);
                 if (
-                    data.token == localStorage.getItem("token_" + gameId) ||
-                    data.token ==
-                        localStorage.getItem("token_" + gameId + gameId)
+                    user.token == localStorage.getItem("token_" + gameId) ||
+                    user.token == localStorage.getItem("token2_" + gameId)
                 ) {
-                    localStorage.clear();
-                    var join_button = document.getElementById(
-                        "join_button_" + data.game_id,
-                    );
-                    join_button.classList.remove("invisible");
                     vibrateDevice();
-                    if (data.operator) {
+                    if (data.queue.operator) {
                         setTimeout(function () {
                             alert(
                                 "An operator removed you from the " +
-                                    data.game_name +
+                                    data.queue.name +
                                     " queue.",
                             );
                         }, 1000);
-                    } else if (data.timed_out) {
+                    } else if (user.timed_out) {
                         setTimeout(function () {
                             alert(
                                 "You were removed from the " +
-                                    data.game_name +
+                                    data.queue.name +
                                     " queue as you did not confirm your spot.",
                             );
                         }, 1000);
@@ -216,30 +251,43 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             });
             socket.on("user_confirm", function (data) {
-                if (data.token == localStorage.getItem("token_" + gameId)) {
-                    var user = data.user;
-                    localStorage.setItem(
-                        "token_" + gameId + gameId,
-                        data.token,
-                    );
-                    var isCurrentUser =
-                        localStorage.getItem("token_" + gameId) == user.token;
-                    localStorage.removeItem("token_" + gameId);
-                    var queue = document.getElementById("queue_" + gameId);
-                    var queueItems = queue.getElementsByTagName("li");
-                    queueItems[0].classList.add("bg-warning");
-                    var confirmButton = createConfirmButton(user);
-                    queueItems[0].appendChild(confirmButton);
-                    queueItems[0].children[2].remove();
-                    vibrateDevice();
-                    setTimeout(function () {
-                        alert(
-                            "Time is up! Head to the " +
-                                data.game_name +
-                                " machine! You have 2 minutes to confirm your spot.",
-                        );
-                    }, 1000);
-                }
+                var group = data.queue[0];
+                group.forEach(function (user) {
+                    if (user.token == localStorage.getItem("token_" + gameId)) {
+                        localStorage.setItem("token2_" + gameId, user.token);
+                        var isCurrentUser =
+                            localStorage.getItem("token_" + gameId) ==
+                            user.token;
+                        localStorage.removeItem("token_" + gameId);
+                        var confirmButton = createConfirmButton(user);
+                        var queue = document.getElementById("queue_" + gameId);
+                        var queueItems = queue.getElementsByTagName("li");
+                        var matchingDiv = Array.from(queueItems)
+                            .map((item) =>
+                                Array.from(
+                                    item.getElementsByTagName("div"),
+                                ).find(
+                                    (div) =>
+                                        div.getAttribute("username") ===
+                                        user.username,
+                                ),
+                            )
+                            .filter(Boolean);
+                        queueItems[0].classList.add("bg-warning");
+                        if (matchingDiv.length > 0) {
+                            matchingDiv[0].appendChild(confirmButton);
+                            matchingDiv[0].children[2].remove();
+                        }
+                        vibrateDevice();
+                        setTimeout(function () {
+                            alert(
+                                "Time is up! Head to the " +
+                                    data.name +
+                                    " machine! You have 2 minutes to confirm your spot.",
+                            );
+                        }, 1000);
+                    }
+                });
             });
         });
     });

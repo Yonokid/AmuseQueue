@@ -4,15 +4,18 @@ operator_code = 12345678
 
 [game_1]
 name = 'maimai DX'
-wait_time = 963
-confirm_time = 120
+double_queue = true
+wait_time = 10
+confirm_time = 30
 
 [game_2]
 name = 'CHUNITHM'
+double_queue = false
 wait_time = 15
 confirm_time = 30
 
 [game_3]
 name = 'ONGEKI'
+double_queue = false
 wait_time = 10
 confirm_time = 10
