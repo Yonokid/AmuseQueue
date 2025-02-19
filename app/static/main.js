@@ -127,12 +127,28 @@ document.addEventListener("DOMContentLoaded", function () {
                     const listItem = event.target.closest("div");
                     const username = listItem.getAttribute("username");
                     const op_code = localStorage.getItem("operator_code");
-                    socket.emit("remove_user", {
-                        username: username,
-                        game_id: gameId,
-                        token: localStorage.getItem("token_" + gameId),
-                        operator_code: op_code,
-                    });
+                    socket.emit(
+                        "remove_user",
+                        {
+                            username: username,
+                            game_id: gameId,
+                            token: localStorage.getItem("token_" + gameId),
+                            operator_code: op_code,
+                        },
+                        (response) => {
+                            if (response.error) {
+                                console.error(
+                                    "Error removing user:",
+                                    response.error,
+                                );
+                            } else {
+                                console.log(
+                                    "User removed successfully:",
+                                    response,
+                                );
+                            }
+                        },
+                    );
                     localStorage.removeItem("token_" + gameId);
                     var join_button = document.getElementById(
                         "join_button_" + gameId,

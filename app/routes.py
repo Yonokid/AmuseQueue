@@ -94,6 +94,7 @@ def handle_remove_user(data):
         for group in queue.queue:
             for user in group:
                 if username == user.username and token == user.token:
+                    print(user)
                     removed_user = user
                     group.remove(user)
                     if group == []:
