@@ -230,6 +230,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     user.token == localStorage.getItem("token_" + gameId) ||
                     user.token == localStorage.getItem("token2_" + gameId)
                 ) {
+                    localStorage.removeItem("token_" + gameId);
+                    localStorage.removeItem("token2_" + gameId);
                     vibrateDevice();
                     if (data.queue.operator) {
                         setTimeout(function () {
@@ -240,6 +242,10 @@ document.addEventListener("DOMContentLoaded", function () {
                             );
                         }, 1000);
                     } else if (user.timed_out) {
+                        var join_button = document.getElementById(
+                            "join_button_" + gameId,
+                        );
+                        join_button.classList.remove("invisible");
                         setTimeout(function () {
                             alert(
                                 "You were removed from the " +
