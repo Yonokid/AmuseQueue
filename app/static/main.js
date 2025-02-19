@@ -85,6 +85,7 @@ document.addEventListener("DOMContentLoaded", function () {
             var i = parseInt(form.id.split("_")[1]);
             var username = document.getElementById("username_" + i).value;
             var game_id = i;
+            var isSoloQueue = document.getElementById("soloQueue_" + i).checked;
             fetch(`/api/get_token?username=${username}&game_id=${game_id}`)
                 .then((response) => response.json())
                 .then((data) => {
@@ -98,6 +99,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         username: username,
                         game_id: game_id,
                         token: token,
+                        solo_queue: isSoloQueue,
                     });
                     var modal = bootstrap.Modal.getInstance(
                         document.getElementById("joinModal_" + i),
@@ -166,47 +168,53 @@ document.addEventListener("DOMContentLoaded", function () {
                     localStorage.getItem("token_" + gameId),
                     localStorage.getItem("token2_" + gameId),
                 ].filter(Boolean);
+
+                // Process each group in the queue
                 data.queue.forEach(function (group) {
                     const listItem = createListItem(group);
                     fragment.appendChild(listItem);
 
-                    fragment.querySelectorAll(".delete-btn").forEach((btn) => {
-                        btn.classList.toggle("invisible");
-                    });
-                    fragment.querySelectorAll(".confirm-btn").forEach((btn) => {
-                        btn.classList.toggle("invisible");
-                    });
+                    // Loop through users in each group
                     group.forEach(function (user) {
                         const isCurrentUser = userTokens.includes(user.token);
+                        const joinButton = listItem.querySelector(
+                            "#join_button_" + gameId,
+                        );
+                        const deleteButton = listItem.querySelector(
+                            "#deleteBtn_" + user.username,
+                        );
+                        const confirmButton = listItem.querySelector(
+                            "#confirmBtn_" + user.username,
+                        );
 
-                        const joinButton = fragment.getElementById(
-                            "join_button_" + gameId,
-                        );
-                        const deleteButton = fragment.getElementById(
-                            "deleteBtn_" + user.username,
-                        );
-                        const confirmButton = fragment.getElementById(
-                            "confirmBtn_" + user.username,
-                        );
-                        joinButton?.classList.toggle(
-                            "invisible",
-                            joinButton && (isCurrentUser || user.is_confirming),
-                        );
-                        if (deleteButton) {
-                            if (isCurrentUser && !user.is_confirming) {
-                                deleteButton.classList.remove("invisible");
-                            }
+                        // Toggle visibility based on conditions
+                        if (joinButton) {
+                            joinButton.classList.toggle(
+                                "invisible",
+                                isCurrentUser || user.is_confirming,
+                            );
                         }
+
+                        if (deleteButton) {
+                            deleteButton.classList.toggle(
+                                "invisible",
+                                !(isCurrentUser && !user.is_confirming),
+                            );
+                        }
+
                         if (confirmButton) {
-                            if (isCurrentUser && user.is_confirming) {
-                                confirmButton.classList.remove("invisible");
-                            }
+                            confirmButton.classList.toggle(
+                                "invisible",
+                                !(isCurrentUser && user.is_confirming),
+                            );
                         }
                     });
                 });
 
+                // Append the fragment after processing all groups
                 queueElement.appendChild(fragment);
 
+                // Add the countdown
                 const countdown = document.createElement("div");
                 countdown.id = "countdown_" + gameId;
                 queueElement.appendChild(countdown);

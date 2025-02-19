@@ -34,12 +34,20 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h1 class="modal-title fs-5" id="modalLabel">Join {{ queue['name'] }} Queue</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <form id="join-form_{{i}}">
                             <div class="modal-body">
                                 <p id="joinModalText_{{i}}">Please write your username below.</p>
                                 <input type="text" class="form-control" placeholder="Username" aria-label="Username" id="username_{{i}}">
+                                {% if queue['double_queue'] %}
+                                    <div class="form-check mt-3">
+                                        <input class="form-check-input" type="checkbox" value="" id="soloQueue_{{i}}">
+                                        <label class="form-check-label" for="soloQueue_{{i}}">
+                                            Solo Queue
+                                        </label>
+                                    </div>
+                                {% endif %}
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

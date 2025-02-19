@@ -106,11 +106,11 @@ def handle_join_queue(data):
     solo_queue: bool = data.get('solo_queue')
     queue = queues[game_id]
     token = data.get('token')
-    if (solo_queue or len(queue.queue) == 0 or len(queue.queue[-1]) == 2) or not queue.double_queue:
-        queue.queue.append([Player(username, token)])
+    if (solo_queue or len(queue.queue) == 0 or len(queue.queue[-1]) == 2 or queue.queue[-1][0].solo_queue) or not queue.double_queue:
+        queue.queue.append([Player(username, token, solo_queue=solo_queue)])
         start_timer(queue, game_id)
     else:
-        queue.queue[-1].append(Player(username, token))
+        queue.queue[-1].append(Player(username, token, solo_queue=solo_queue))
 
     socketio.emit('queue_update', queue.get_info())
 
