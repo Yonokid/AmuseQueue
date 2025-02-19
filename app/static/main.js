@@ -177,7 +177,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     // Loop through users in each group
                     group.forEach(function (user) {
                         const isCurrentUser = userTokens.includes(user.token);
-                        const joinButton = listItem.querySelector(
+                        const joinButton = document.querySelector(
                             "#join_button_" + gameId,
                         );
                         const deleteButton = listItem.querySelector(
@@ -191,7 +191,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (joinButton) {
                             joinButton.classList.toggle(
                                 "invisible",
-                                isCurrentUser || user.is_confirming,
+                                isCurrentUser,
                             );
                         }
 
