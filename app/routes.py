@@ -89,12 +89,16 @@ def handle_remove_user(data):
         socketio.emit('user_removed', {'queue': queue.get_info(), 'user': json.dumps(removed_user.__dict__)})
     else:
         token = data.get('token')
+        if token is None:
+            return
         for group in queue.queue:
-            if Player(username, token) not in group:
-                return
-            removed_user = group.remove(Player(username, token))
-            if group == []:
-                queue.queue.remove(group)
+            for user in group:
+                if username == user.username and token == user.token:
+                    removed_user = user
+                    group.remove(user)
+                    if group == []:
+                        queue.queue.remove(group)
+                    break
     if queue:
         start_timer(queue, game_id)
     socketio.emit('queue_update', queue.get_info())
