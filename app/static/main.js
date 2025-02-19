@@ -85,7 +85,8 @@ document.addEventListener("DOMContentLoaded", function () {
             var i = parseInt(form.id.split("_")[1]);
             var username = document.getElementById("username_" + i).value;
             var game_id = i;
-            var isSoloQueue = document.getElementById("soloQueue_" + i).checked;
+            var element = document.getElementById("soloQueue_" + i);
+            var isSoloQueue = element ? element.checked : null;
             fetch(`/api/get_token?username=${username}&game_id=${game_id}`)
                 .then((response) => response.json())
                 .then((data) => {
