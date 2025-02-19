@@ -178,8 +178,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     // Loop through users in each group
                     group.forEach(function (user) {
                         const isCurrentUser = userTokens.includes(user.token);
-                        const joinButton = document.querySelector(
-                            "#join_button_" + gameId,
+                        const joinButton = document.getElementById(
+                            "join_button_" + gameId,
                         );
                         const deleteButton = listItem.querySelector(
                             "#deleteBtn_" + user.username,
@@ -187,13 +187,11 @@ document.addEventListener("DOMContentLoaded", function () {
                         const confirmButton = listItem.querySelector(
                             "#confirmBtn_" + user.username,
                         );
-
                         // Toggle visibility based on conditions
                         if (joinButton) {
-                            joinButton.classList.toggle(
-                                "invisible",
-                                isCurrentUser,
-                            );
+                            if (isCurrentUser) {
+                                joinButton.classList.add("invisible");
+                            }
                         }
 
                         if (deleteButton) {
