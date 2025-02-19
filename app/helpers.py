@@ -83,13 +83,16 @@ def get_random_token(input: str, secret_key: str) -> str:
 def username_filtered(username: str, queue: Queue) -> bool:
     if not username:
         return True
-    if username.strip() == '' or username == "‎":
+    if not username.isalnum():
+        return True
+    if ' ' in username:
         return True
     for group in queue.queue:
         for user in group:
             if user.username == username:
                 return True
     return False
+
 
 def verify_operator_code(operator_code: str, current_op_code: str) -> bool:
     if current_op_code == '':
