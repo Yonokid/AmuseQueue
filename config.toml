@@ -1,6 +1,5 @@
 [store]
 store_name = 'GAME PARK'
-operator_code = 12345678
 
 [game_1]
 name = 'maimai DX'

@@ -1,4 +1,5 @@
 import json
+import os
 import threading
 import time
 from io import BytesIO
@@ -149,7 +150,7 @@ def init_routes(app):
     def operator():
         global current_op_code
         operator_code = str(request.args.get('operator_code'))
-        if str(operator_code) != str(config_info['store']['operator_code']):
+        if str(operator_code) != str(os.getenv('OPERATOR_CODE')):
             return
         token = get_random_token(operator_code, app.config['SECRET_KEY'])
         current_op_code = token
