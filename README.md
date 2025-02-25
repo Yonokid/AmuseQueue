@@ -19,8 +19,10 @@
 Here're some of the project's best features:
 
 *   Websocket based live queue
+*   Double queue system for 2 player games
 *   Configurable store settings
 *   Live operator access
+*   Kiosk mode with auto generating QR code for quick access
 
 <h2>Installation Steps:</h2>
 
