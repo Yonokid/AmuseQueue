@@ -22,7 +22,7 @@ Here're some of the project's best features:
 *   Configurable store settings
 *   Live operator access
 
-<h2>🛠Installation Steps:</h2>
+<h2>Installation Steps:</h2>
 
 <p>1. Install project requirements</p>
 
