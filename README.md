@@ -31,14 +31,20 @@ Here're some of the project's best features:
 ```
 pip install -r requirements.txt
 ```
+<p>2. Initialize .env file</p>
+```
+FLASK_APP=game_queue.py
+SECRET_KEY=
+OPERATOR_CODE=
+```
 
-<p>2. (Windows only) Enable debug</p>
+<p>3. (Windows only) Enable debug</p>
 
 ```
 in __init__.py debug = True
 ```
 
-<p>3. Run with flask</p>
+<p>4. Run with flask</p>
 
 ```
 flask run
