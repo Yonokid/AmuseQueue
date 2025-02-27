@@ -32,6 +32,7 @@ Here're some of the project's best features:
 pip install -r requirements.txt
 ```
 <p>2. Initialize .env file</p>
+
 ```
 FLASK_APP=game_queue.py
 SECRET_KEY=
