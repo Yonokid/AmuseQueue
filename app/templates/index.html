@@ -98,6 +98,10 @@
                         Array.from(deleteBtns).forEach(function(deleteBtn) {
                             deleteBtn.classList.toggle("invisible");
                         });
+                        const confirmBtns = document.getElementsByClassName('confirm-btn');
+                        Array.from(confirmBtns).forEach(function(confirmBtn)) {
+                            confirmBtn.classList.toggle("invisible");
+                        });
                     })
                 .catch(error => {
                     var opModalText = document.getElementById('opModalLabel');
