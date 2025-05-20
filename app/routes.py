@@ -111,6 +111,8 @@ def handle_join_queue(data):
     username: str = data.get('username')
     solo_queue: bool = data.get('solo_queue')
     queue = queues[game_id]
+    if len(queue.queue) >= 5:
+        solo_queue = False
     token = data.get('token')
     if (solo_queue or len(queue.queue) == 0 or len(queue.queue[-1]) == 2 or queue.queue[-1][0].solo_queue) or not queue.double_queue:
         queue.queue.append([Player(username, token, solo_queue=solo_queue)])

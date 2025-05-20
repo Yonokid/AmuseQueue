@@ -284,9 +284,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 group.forEach(function (user) {
                     if (user.token == localStorage.getItem("token_" + gameId)) {
                         localStorage.setItem("token2_" + gameId, user.token);
-                        var isCurrentUser =
-                            localStorage.getItem("token_" + gameId) ==
-                            user.token;
                         localStorage.removeItem("token_" + gameId);
                         var confirmButton = createConfirmButton(user);
                         var queue = document.getElementById("queue_" + gameId);
