@@ -4,7 +4,7 @@ info = ""
 
 [game_1]
 name = "maimai DX"
-info = ""
+info = "Test"
 double_queue = true
 wait_time = 947
 confirm_time = 120

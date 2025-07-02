@@ -6,7 +6,10 @@
                 <div style="width: 100px;"></div> <!-- Left spacer -->
                 <div class="text-center">
                     <h1>{{ store['name'] }} Queue</h1>
-                    <p>{{ store['info']|safe }}</p>
+                    <details>
+                        <summary>Store Rules</summary>
+                        <p>{{ store['info']|safe }}</p>
+                    </details>
                 </div>
                 <div style="width: 100px;" class="text-end"> <!-- Right container -->
                     {% if not view_only %}
@@ -31,8 +34,11 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <div style="width: 150px;"></div> <!-- Left spacer -->
                             <div class="text-center">
-                                <h2><b id="queue-name-{{i}}">{{ queue['name'] }}</b></h2>
-                                <p id="queue-info-{{i}}">{{ queue['info']|safe }}</h3>
+                                <h2><b id="queue-name-{{i}}" style="white-space: nowrap;">{{ queue['name'] }}</b></h2>
+                                <details>
+                                    <summary>Queue Info</summary>
+                                    <p id="queue-info-{{i}}">{{ queue['info']|safe }}</p>
+                                </details>
                             </div>
                             <div style="width: 150px;" class="text-end"> <!-- Right container -->
                                 {% if not view_only %}
