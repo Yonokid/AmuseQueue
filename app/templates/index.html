@@ -300,6 +300,7 @@
 
                     // Optional: Show success message
                     console.log('Store information updated successfully');
+                    location.reload();
                 } else {
                     alert('Failed to update store information: ' + (data.message || 'Unknown error'));
                 }
