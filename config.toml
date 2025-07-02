@@ -1,27 +1,27 @@
 [store]
-name = "GAME PARK"
-info = "test"
+name = "Ikigai Arcade"
+info = ""
 
 [game_1]
 name = "maimai DX"
 info = ""
 double_queue = true
-wait_time = 10
-confirm_time = 30
+wait_time = 947
+confirm_time = 120
 
 [game_2]
 name = "CHUNITHM"
 info = ""
 double_queue = false
-wait_time = 15
-confirm_time = 30
+wait_time = 785
+confirm_time = 120
 
 [game_3]
 name = "ONGEKI"
 info = ""
 double_queue = false
-wait_time = 10
-confirm_time = 10
+wait_time = 874
+confirm_time = 120
 
 [game_4]
 name = "PUMP IT UP"
