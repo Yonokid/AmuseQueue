@@ -32,7 +32,7 @@
                             <div style="width: 150px;"></div> <!-- Left spacer -->
                             <div class="text-center">
                                 <h2><b id="queue-name-{{i}}">{{ queue['name'] }}</b></h2>
-                                <h3 id="queue-info-{{i}}">{{ queue['info'] }}</h3>
+                                <h3 id="queue-info-{{i}}">{{ queue['info']|safe }}</h3>
                             </div>
                             <div style="width: 150px;" class="text-end"> <!-- Right container -->
                                 {% if not view_only %}
