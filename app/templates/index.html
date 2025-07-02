@@ -2,7 +2,20 @@
 {% block content %}
     <div class="container d-flex flex-column justify-content-center">
         <div class="container p-4 text-center">
-            <h1 class="text-center">{{ store['store_name'] }} Queue</h1>
+            <div class="d-flex justify-content-between align-items-center">
+                <div style="width: 100px;"></div> <!-- Left spacer -->
+                <div class="text-center">
+                    <h1>{{ store['name'] }} Queue</h1>
+                    <h3>{{ store['info'] }}</h3>
+                </div>
+                <div style="width: 100px;" class="text-end"> <!-- Right container -->
+                    {% if not view_only %}
+                        <button type="button" class="btn btn-outline-secondary btn-sm invisible" id="edit-store" data-bs-toggle="modal" data-bs-target="#editStoreModal" title="Edit Store Info">
+                            <i class="bi bi-pencil"></i> Edit
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
         </div>
             {% if view_only %}
             <div class="container p-1 text-center">
@@ -11,24 +24,49 @@
             {% endif %}
         {% for i in range(queue_list|length) %}
             {% set queue = queue_list[i] %}
-            <div class="container md-4 p-2 my-4 rounded bg-body-secondary text-center">
-                <div>
-                    <h2><b>{{ queue['name'] }}</b></h2>
-                </div>
-                <div>
-                    <h4>Wait Time: {{ formatTime(queue['wait_time']|int) }}</h4>
-                </div>
-                <div>
-                    <h4>Current Queue:</h4>
-                    <ul id="queue_{{i}}" class="list-group">
-                    </ul>
-                </div>
+            <div class="container md-4 p-2 my-4 rounded bg-body-secondary">
+                <div class="row">
+                    <!-- Left column: Queue Information -->
+                    <div class="col-md-6 text-center d-flex flex-column justify-content-center">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div style="width: 150px;"></div> <!-- Left spacer -->
+                            <div class="text-center">
+                                <h2><b id="queue-name-{{i}}">{{ queue['name'] }}</b></h2>
+                                <h3 id="queue-info-{{i}}">{{ queue['info'] }}</h3>
+                            </div>
+                            <div style="width: 150px;" class="text-end"> <!-- Right container -->
+                                {% if not view_only %}
+                                    <button type="button" class="btn btn-outline-secondary btn-sm me-1 invisible edit-queue-btn" id="edit-queue-{{i}}" data-bs-toggle="modal" data-bs-target="#editQueueModal_{{i}}" title="Edit Queue Info">
+                                        <i class="bi bi-pencil"></i>Edit
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning btn-sm invisible restart-queue-btn" id="restart-queue-{{i}}" data-queue-index="{{i}}" title="Restart Queue">
+                                        <i class="bi bi-arrow-clockwise"></i> Restart
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div>
+                            <h4>Wait Time: {{ formatTime(queue['wait_time']|int) }}</h4>
+                        </div>
+                    </div>
+
+                    <!-- Right column: Current Queue -->
+                    <div class="col-md-6">
+                        <div class="text-center">
+                            <h4>Current Queue:</h4>
+                            <ul id="queue_{{i}}" class="list-group">
+                            </ul>
+                        </div>
+                    </div>
                 {% if not view_only %}
-                    <div>
+                    <div class="mt-3 d-flex justify-content-center">
                         <button type="button" id="join_button_{{i}}" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#joinModal_{{i}}">Join Queue</button>
                     </div>
                 {% endif %}
+                </div>
             </div>
+
+            <!-- Join Queue Modal -->
             <div class="modal fade" id="joinModal_{{i}}" tabindex="-1" aria-labelledby="joinModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -44,7 +82,7 @@
                                     <div class="form-check mt-3">
                                         <input class="form-check-input" type="checkbox" value="" id="soloQueue_{{i}}">
                                         <label class="form-check-label" for="soloQueue_{{i}}">
-                                            Solo Queue
+                                            Solo Queue (Available if queue is less than 4 players)
                                         </label>
                                     </div>
                                 {% endif %}
@@ -57,8 +95,80 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Edit Queue Modal -->
+            {% if not view_only %}
+            <div class="modal fade" id="editQueueModal_{{i}}" tabindex="-1" aria-labelledby="editQueueModalLabel_{{i}}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="editQueueModalLabel_{{i}}">Edit Queue Information</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form id="edit-queue-form_{{i}}" data-queue-index="{{i}}">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="queue-name-input-{{i}}" class="form-label">Queue Name</label>
+                                    <input type="text" class="form-control" id="queue-name-input-{{i}}" value="{{ queue['name'] }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="queue-info-input-{{i}}" class="form-label">Queue Information</label>
+                                    <textarea class="form-control" id="queue-info-input-{{i}}" rows="3">{{ queue['info'] }}</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="queue-wait-time-{{i}}" class="form-label">Wait Time (seconds)</label>
+                                    <input type="number" class="form-control" id="queue-wait-time-{{i}}" value="{{ queue['wait_time'] }}" min="0" required>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="queue-double-queue-{{i}}" {% if queue['double_queue'] %}checked{% endif %}>
+                                    <label class="form-check-label" for="queue-double-queue-{{i}}">
+                                        Enable Double Queue (Solo Queue option)
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         {% endfor %}
     </div>
+
+    <!-- Edit Store Modal -->
+    {% if not view_only %}
+    <div class="modal fade" id="editStoreModal" tabindex="-1" aria-labelledby="editStoreModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="editStoreModalLabel">Edit Store Information</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="edit-store-form">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="store-name" class="form-label">Store Name</label>
+                            <input type="text" class="form-control" id="store-name" value="{{ store['name'] }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="store-info" class="form-label">Store Information</label>
+                            <textarea class="form-control" id="store-info" rows="3">{{ store['info'] }}</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Operator Access Modal -->
     <div>
         {% if not view_only %}
             <button type="btn" data-bs-toggle="modal" data-bs-target="#opModal" class="btn btn-outline-primary fixed-bottom-right" id="op-button" style="position: fixed; bottom: 20px; right: 20px;">Operator Access</button>
@@ -82,31 +192,189 @@
                 </div>
             </div>
         </div>
-        <script>
-            document.getElementById('op-form').addEventListener('submit', function(event) {
-                event.preventDefault();
-                const operatorCode = document.getElementById('op-code').value;
-                fetch(`/api/operator?operator_code=${operatorCode}`)
+    </div>
+    <script src="{{url_for('static', filename='main.js')}}"></script>
+    <script>
+        document.getElementById('op-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const operatorCode = document.getElementById('op-code').value;
+            fetch(`/api/operator?operator_code=${operatorCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    var token = data.token;
+                    localStorage.setItem('operator_code', token);
+                    const modalElement = document.getElementById('opModal');
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    modal.hide();
+                    const deleteBtns = document.getElementsByClassName('delete-btn');
+                    Array.from(deleteBtns).forEach(function(deleteBtn) {
+                        deleteBtn.classList.toggle("invisible");
+                    });
+                    const confirmBtns = document.getElementsByClassName('confirm-btn');
+                    Array.from(confirmBtns).forEach(function(confirmBtn) {
+                        confirmBtn.classList.toggle("invisible");
+                    });
+                    const editStoreBtn = document.getElementById('edit-store');
+                    editStoreBtn.classList.toggle("invisible");
+
+                    // Show all queue edit buttons
+                    const editQueueBtns = document.getElementsByClassName('edit-queue-btn');
+                    Array.from(editQueueBtns).forEach(function(editQueueBtn) {
+                        editQueueBtn.classList.toggle("invisible");
+                    });
+
+                    // Show all queue restart buttons
+                    const restartQueueBtns = document.getElementsByClassName('restart-queue-btn');
+                    Array.from(restartQueueBtns).forEach(function(restartQueueBtn) {
+                        restartQueueBtn.classList.toggle("invisible");
+                    });
+                })
+            .catch(error => {
+                var opModalText = document.getElementById('opModalLabel');
+                opModalText.textContent = 'Incorrect Code!';
+                opModalText.classList.add("text-danger-emphasis");
+                console.error('Error fetching token:', error);
+            });
+        });
+
+        // Restart Queue Button Handler
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('restart-queue-btn') || event.target.closest('.restart-queue-btn')) {
+                const button = event.target.classList.contains('restart-queue-btn') ? event.target : event.target.closest('.restart-queue-btn');
+                const queueIndex = button.getAttribute('data-queue-index');
+                const operatorToken = localStorage.getItem('operator_code');
+
+                if (confirm('Are you sure you want to restart this queue?')) {
+                    fetch('/api/queue/restart', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            queue_index: parseInt(queueIndex),
+                            op_code: operatorToken
+                        })
+                    })
                     .then(response => response.json())
                     .then(data => {
-                        var token = data.token;
-                        localStorage.setItem('operator_code', token);
-                        const modalElement = document.getElementById('opModal');
-                        const modal = bootstrap.Modal.getInstance(modalElement);
-                        modal.hide();
-                        const deleteBtns = document.getElementsByClassName('delete-btn');
-                        Array.from(deleteBtns).forEach(function(deleteBtn) {
-                            deleteBtn.classList.toggle("invisible");
-                        });
+                        if (data.success) {
+                            // Refresh the page to update the queue display
+                            location.reload();
+                        } else {
+                            alert('Failed to restart queue: ' + (data.message || 'Unknown error'));
+                        }
                     })
-                .catch(error => {
-                    var opModalText = document.getElementById('opModalLabel');
-                    opModalText.textContent = 'Incorrect Code!';
-                    opModalText.classList.add("text-danger-emphasis");
-                    console.error('Error fetching token:', error);
-                });
+                    .catch(error => {
+                        console.error('Error restarting queue:', error);
+                        alert('Error restarting queue. Please try again.');
+                    });
+                }
+            }
+        });
+
+        // Edit Store Form Handler
+        document.getElementById('edit-store-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const storeName = document.getElementById('store-name').value;
+            const storeInfo = document.getElementById('store-info').value;
+            const operatorToken = localStorage.getItem('operator_code');
+
+            fetch('/api/store/edit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: storeName,
+                    info: storeInfo,
+                    op_code: operatorToken,
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the displayed store name and info
+                    document.querySelector('h1.text-center').textContent = storeName + ' Queue';
+                    document.querySelector('h3.text-center').textContent = storeInfo;
+
+                    // Close the modal
+                    const modalElement = document.getElementById('editStoreModal');
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    modal.hide();
+
+                    // Optional: Show success message
+                    console.log('Store information updated successfully');
+                } else {
+                    alert('Failed to update store information: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error updating store information:', error);
+                alert('Error updating store information. Please try again.');
             });
-        </script>
-        <script src="{{url_for('static', filename='main.js')}}"></script>
-    </div>
+        });
+
+        // Edit Queue Form Handlers - Dynamic event delegation
+        document.addEventListener('submit', function(event) {
+            // Check if the submitted form is a queue edit form
+            if (event.target.id.startsWith('edit-queue-form_')) {
+                event.preventDefault();
+
+                const queueIndex = event.target.getAttribute('data-queue-index');
+                const queueName = document.getElementById(`queue-name-input-${queueIndex}`).value;
+                const queueInfo = document.getElementById(`queue-info-input-${queueIndex}`).value;
+                const waitTime = document.getElementById(`queue-wait-time-${queueIndex}`).value;
+                const doubleQueue = document.getElementById(`queue-double-queue-${queueIndex}`).checked;
+                const operatorToken = localStorage.getItem('operator_code');
+
+                fetch('/api/queue/edit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        queue_index: parseInt(queueIndex),
+                        name: queueName,
+                        info: queueInfo,
+                        wait_time: parseInt(waitTime),
+                        double_queue: doubleQueue,
+                        op_code: operatorToken,
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update the displayed queue name and info
+                        document.getElementById(`queue-name-${queueIndex}`).textContent = queueName;
+                        document.getElementById(`queue-info-${queueIndex}`).textContent = queueInfo;
+
+                        // Update the join modal title
+                        const joinModalTitle = document.querySelector(`#joinModal_${queueIndex} .modal-title`);
+                        if (joinModalTitle) {
+                            joinModalTitle.textContent = `Join ${queueName} Queue`;
+                        }
+
+                        // Close the modal
+                        const modalElement = document.getElementById(`editQueueModal_${queueIndex}`);
+                        const modal = bootstrap.Modal.getInstance(modalElement);
+                        if (modal) {
+                            modal.hide();
+                        }
+
+                        // Optional: Show success message
+                        console.log('Queue information updated successfully');
+
+                        // Refresh the page to update wait time display and other dynamic content
+                        location.reload();
+                    } else {
+                        alert('Failed to update queue information: ' + (data.message || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating queue information:', error);
+                    alert('Error updating queue information. Please try again.');
+                });
+            }
+        });
+    </script>
 {% endblock %}

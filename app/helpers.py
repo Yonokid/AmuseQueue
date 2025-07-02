@@ -1,30 +1,35 @@
 import math
 import random
 import threading
+from datetime import datetime, timedelta
 from typing import Optional
 
 import jwt
+import tomli_w
 import tomllib
 
 
 class Queue:
-    def __init__(self, game_id, name, wait_time, confirm_time, double_queue):
+    def __init__(self, game_id: int, name: str, wait_time: int, confirm_time: int, double_queue: bool, info: str):
         self.name = name
         self.game_id = game_id
         self.wait_time = wait_time
         self.confirm_time = confirm_time
         self.timer_thread: Optional[threading.Thread] = None
+        self.timer_end_time = datetime.now() + timedelta(seconds=self.wait_time)
         self.timer_running = False
         self.time_left = self.wait_time
         self.operator = False
         self.queue: list[list[Player]] = []
         self.double_queue = double_queue
+        self.info = info
 
     def get_info(self) -> dict:
         return {'game_id': self.game_id, 'name': self.name,
                 'wait_time': self.wait_time, 'confirm_time': self.confirm_time,
                 'time_left': self.time_left, 'operator': self.operator,
-                'queue': [[player.get_info() for player in sublist] for sublist in self.queue]}
+                'queue': [[player.get_info() for player in sublist] for sublist in self.queue],
+                'info': self.info}
 
 class Player:
     def __init__(self, name, token, solo_queue=False):
@@ -56,6 +61,10 @@ def load_config() -> dict:
         config_info = tomllib.load(f)
     return config_info
 
+def save_config(config_data: dict) -> None:
+    with open('config.toml', 'wb') as f:
+        tomli_w.dump(config_data, f)
+
 def create_queues(config_info: dict) -> list[Queue]:
     queues = []
     for i in range(len(config_info)+1):
@@ -63,7 +72,8 @@ def create_queues(config_info: dict) -> list[Queue]:
             queue = Queue(i-1, config_info[f'game_{i}']["name"],
                         config_info[f'game_{i}']["wait_time"],
                         config_info[f'game_{i}']["confirm_time"],
-                        config_info[f'game_{i}']["double_queue"])
+                        config_info[f'game_{i}']["double_queue"],
+                        config_info[f'game_{i}']["info"])
             queues.append(queue)
     return queues
 
@@ -95,8 +105,4 @@ def username_filtered(username: str, queue: Queue) -> bool:
 
 
 def verify_operator_code(operator_code: str, current_op_code: str) -> bool:
-    if current_op_code == '':
-        return False
-    if operator_code != current_op_code:
-        return False
-    return True
+    return current_op_code != '' and operator_code == current_op_code
