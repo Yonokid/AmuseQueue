@@ -244,7 +244,7 @@
                 const queueIndex = button.getAttribute('data-queue-index');
                 const operatorToken = localStorage.getItem('operator_code');
 
-                if (confirm('Are you sure you want to restart this queue? This will clear all current queue members.')) {
+                if (confirm('Are you sure you want to restart this queue?')) {
                     fetch('/api/queue/restart', {
                         method: 'POST',
                         headers: {
