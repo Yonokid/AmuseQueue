@@ -6,7 +6,7 @@
                 <div style="width: 100px;"></div> <!-- Left spacer -->
                 <div class="text-center">
                     <h1>{{ store['name'] }} Queue</h1>
-                    <h3>{{ store['info'] }}</h3>
+                    <p>{{ store['info']|safe }}</p>
                 </div>
                 <div style="width: 100px;" class="text-end"> <!-- Right container -->
                     {% if not view_only %}
@@ -293,10 +293,6 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Update the displayed store name and info
-                    document.querySelector('h1.text-center').textContent = storeName + ' Queue';
-                    document.querySelector('h3.text-center').textContent = storeInfo;
-
                     // Close the modal
                     const modalElement = document.getElementById('editStoreModal');
                     const modal = bootstrap.Modal.getInstance(modalElement);

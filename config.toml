@@ -1,6 +1,6 @@
 [store]
 name = "GAME PARK"
-info = ""
+info = "test"
 
 [game_1]
 name = "maimai DX"

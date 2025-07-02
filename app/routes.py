@@ -187,7 +187,7 @@ def init_routes(app):
                 'message': 'Invalid Operator Code',
             })
         config_info['store']['name'] = data.get('name', '').strip()
-        config_info['store']['info'] = data.get('info', '').strip()
+        config_info['store']['info'] = (data.get('info', '')).replace('\n', '<br>')
         save_config(config_info)
         return jsonify({
             'success': True,
@@ -210,7 +210,7 @@ def init_routes(app):
             })
         index = data.get('queue_index', None)+1
         name = data.get('name', '').strip()
-        info = data.get('info', '').strip()
+        info = (data.get('info', '')).replace('\n', '<br>')
         wait_time = data.get('wait_time', 0)
         double_queue = data.get('double_queue', False)
         config_info[f'game_{index}']['name'] = name
