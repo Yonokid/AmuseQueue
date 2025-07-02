@@ -2,6 +2,7 @@ import json
 import os
 import threading
 import time
+from datetime import datetime, timedelta
 from io import BytesIO
 
 import qrcode
@@ -28,54 +29,64 @@ current_op_code = ''
 
 def start_timer(queue: Queue, game_id, timer_type='wait', time_left=None):
     if not queue.timer_thread:
-        if timer_type == 'wait':
-            queue.time_left = queue.wait_time
-        elif timer_type == 'confirm':
-            queue.time_left = queue.confirm_time
+        duration = queue.wait_time
+        if timer_type == 'confirm':
+            duration = queue.confirm_time
 
+        # Set the end time instead of time_left
+        queue.timer_end_time = datetime.now() + timedelta(seconds=duration)
         queue.timer_thread = threading.Thread(target=timer, args=(queue, game_id, timer_type))
         queue.timer_thread.start()
 
 def restart_timer(queue: Queue, game_id):
     if queue.timer_thread:
         queue.timer_thread = None
+        queue.timer_end_time = datetime.now() + timedelta(seconds=queue.wait_time)
         queue.timer_thread = threading.Thread(target=timer, args=(queue, game_id, 'wait'))
         queue.timer_thread.start()
 
 def timer(queue: Queue, game_id, timer_type):
     queue.timer_running = True
-
     current_len = len(queue.queue)
-    while queue.time_left > 0:
+
+    while datetime.now() < queue.timer_end_time:
         if len(queue.queue) == 0:
             queue.timer_running = False
             queue.timer_thread = None
             return
+
         if timer_type == 'confirm' and len(queue.queue) != current_len:
             queue.timer_running = False
             queue.timer_thread = None
             start_timer(queue, game_id, timer_type='wait')
             return
+
+        # Calculate remaining time for display purposes
+        remaining = queue.timer_end_time - datetime.now()
+        queue.time_left = max(0, int(remaining.total_seconds()))
+
         socketio.emit('timer_update', queue.get_info())
         current_len = len(queue.queue)
-        time.sleep(1)
-        queue.time_left -= 1
+        time.sleep(0.1)  # Much shorter sleep for better responsiveness
 
+    # Timer expired
     queue.timer_running = False
     queue.timer_thread = None
+    queue.time_left = 0
 
     if timer_type == 'wait':
         socketio.emit('user_confirm', queue.get_info())
         for user in queue.queue[0]:
             user.is_confirming = True
         start_timer(queue, game_id, timer_type='confirm')
-    if timer_type == 'confirm':
+    elif timer_type == 'confirm':
         group = queue.queue.pop(0)
         for user in group:
             user.timed_out = True
             socketio.emit('user_removed', {'queue': queue.get_info(), 'user': json.dumps(user.__dict__)})
         if queue.queue:
             start_timer(queue, game_id, timer_type='wait')
+
     socketio.emit('queue_update', queue.get_info())
 
 @socketio.on('remove_user')

@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_socketio import SocketIO
 
-debug = False
+debug = True
 if debug:
     socketio = SocketIO()
 else:

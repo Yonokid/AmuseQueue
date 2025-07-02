@@ -1,6 +1,7 @@
 import math
 import random
 import threading
+from datetime import datetime, timedelta
 from typing import Optional
 
 import jwt
@@ -15,6 +16,7 @@ class Queue:
         self.wait_time = wait_time
         self.confirm_time = confirm_time
         self.timer_thread: Optional[threading.Thread] = None
+        self.timer_end_time = datetime.now() + timedelta(seconds=self.wait_time)
         self.timer_running = False
         self.time_left = self.wait_time
         self.operator = False
