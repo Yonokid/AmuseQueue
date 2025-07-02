@@ -2,16 +2,19 @@
 {% block content %}
     <div class="container d-flex flex-column justify-content-center">
         <div class="container p-4 text-center">
-            <div class="d-flex justify-content-center align-items-center">
-                <div>
-                    <h1 class="text-center">{{ store['name'] }} Queue</h1>
-                    <h3 class="text-center">{{ store['info'] }}</h3>
+            <div class="d-flex justify-content-between align-items-center">
+                <div style="width: 100px;"></div> <!-- Left spacer -->
+                <div class="text-center">
+                    <h1>{{ store['name'] }} Queue</h1>
+                    <h3>{{ store['info'] }}</h3>
                 </div>
-                {% if not view_only %}
-                    <button type="button" class="btn btn-outline-secondary btn-sm ms-3 invisible" id="edit-store" data-bs-toggle="modal" data-bs-target="#editStoreModal" title="Edit Store Info">
-                        <i class="bi bi-pencil"></i> Edit
-                    </button>
-                {% endif %}
+                <div style="width: 100px;" class="text-end"> <!-- Right container -->
+                    {% if not view_only %}
+                        <button type="button" class="btn btn-outline-secondary btn-sm invisible" id="edit-store" data-bs-toggle="modal" data-bs-target="#editStoreModal" title="Edit Store Info">
+                            <i class="bi bi-pencil"></i> Edit
+                        </button>
+                    {% endif %}
+                </div>
             </div>
         </div>
             {% if view_only %}
@@ -25,16 +28,22 @@
                 <div class="row">
                     <!-- Left column: Queue Information -->
                     <div class="col-md-6 text-center d-flex flex-column justify-content-center">
-                        <div class="d-flex justify-content-center align-items-center">
-                            <div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div style="width: 150px;"></div> <!-- Left spacer -->
+                            <div class="text-center">
                                 <h2><b id="queue-name-{{i}}">{{ queue['name'] }}</b></h2>
                                 <h3 id="queue-info-{{i}}">{{ queue['info'] }}</h3>
                             </div>
-                            {% if not view_only %}
-                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2 invisible edit-queue-btn" id="edit-queue-{{i}}" data-bs-toggle="modal" data-bs-target="#editQueueModal_{{i}}" title="Edit Queue Info">
-                                    <i class="bi bi-pencil">Edit</i>
-                                </button>
-                            {% endif %}
+                            <div style="width: 150px;" class="text-end"> <!-- Right container -->
+                                {% if not view_only %}
+                                    <button type="button" class="btn btn-outline-secondary btn-sm me-1 invisible edit-queue-btn" id="edit-queue-{{i}}" data-bs-toggle="modal" data-bs-target="#editQueueModal_{{i}}" title="Edit Queue Info">
+                                        <i class="bi bi-pencil"></i>Edit
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning btn-sm invisible restart-queue-btn" id="restart-queue-{{i}}" data-queue-index="{{i}}" title="Restart Queue">
+                                        <i class="bi bi-arrow-clockwise"></i> Restart
+                                    </button>
+                                {% endif %}
+                            </div>
                         </div>
                         <div>
                             <h4>Wait Time: {{ formatTime(queue['wait_time']|int) }}</h4>
@@ -213,6 +222,12 @@
                     Array.from(editQueueBtns).forEach(function(editQueueBtn) {
                         editQueueBtn.classList.toggle("invisible");
                     });
+
+                    // Show all queue restart buttons
+                    const restartQueueBtns = document.getElementsByClassName('restart-queue-btn');
+                    Array.from(restartQueueBtns).forEach(function(restartQueueBtn) {
+                        restartQueueBtn.classList.toggle("invisible");
+                    });
                 })
             .catch(error => {
                 var opModalText = document.getElementById('opModalLabel');
@@ -220,6 +235,41 @@
                 opModalText.classList.add("text-danger-emphasis");
                 console.error('Error fetching token:', error);
             });
+        });
+
+        // Restart Queue Button Handler
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('restart-queue-btn') || event.target.closest('.restart-queue-btn')) {
+                const button = event.target.classList.contains('restart-queue-btn') ? event.target : event.target.closest('.restart-queue-btn');
+                const queueIndex = button.getAttribute('data-queue-index');
+                const operatorToken = localStorage.getItem('operator_code');
+
+                if (confirm('Are you sure you want to restart this queue? This will clear all current queue members.')) {
+                    fetch('/api/queue/restart', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            queue_index: parseInt(queueIndex),
+                            op_code: operatorToken
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Refresh the page to update the queue display
+                            location.reload();
+                        } else {
+                            alert('Failed to restart queue: ' + (data.message || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error restarting queue:', error);
+                        alert('Error restarting queue. Please try again.');
+                    });
+                }
+            }
         });
 
         // Edit Store Form Handler

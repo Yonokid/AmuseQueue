@@ -36,6 +36,12 @@ def start_timer(queue: Queue, game_id, timer_type='wait', time_left=None):
         queue.timer_thread = threading.Thread(target=timer, args=(queue, game_id, timer_type))
         queue.timer_thread.start()
 
+def restart_timer(queue: Queue, game_id):
+    if queue.timer_thread:
+        queue.timer_thread = None
+        queue.timer_thread = threading.Thread(target=timer, args=(queue, game_id, 'wait'))
+        queue.timer_thread.start()
+
 def timer(queue: Queue, game_id, timer_type):
     queue.timer_running = True
 
@@ -208,6 +214,23 @@ def init_routes(app):
         return jsonify({
             'success': True,
             'message': 'Queue information updated successfully',
+        })
+
+    @app.route('/api/queue/restart', methods=['POST'])
+    def restart_queue():
+        global current_op_code
+        data = request.get_json()
+        op_code = data.get('op_code', '').strip()
+        if not verify_operator_code(op_code, current_op_code):
+            return jsonify({
+                'success': False,
+                'message': 'Invalid Operator Code',
+            })
+        index = data.get('queue_index', None)
+        restart_timer(queues[index], index)
+        return jsonify({
+            'success': True,
+            'message': 'Queue restarted.',
         })
 
 
