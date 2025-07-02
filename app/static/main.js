@@ -74,7 +74,11 @@ function createConfirmButton(user) {
     return spanConfirm;
 }
 function showBrowserNotification(title, message, icon = null) {
-    if ("Notification" in window && Notification.permission === "granted") {
+    if (
+        "Notification" in window &&
+        Notification.permission === "granted" &&
+        location.protocol === "https:"
+    ) {
         const notification = new Notification(title, {
             body: message,
             icon: icon || "/favicon.ico",
@@ -103,7 +107,9 @@ document.addEventListener("DOMContentLoaded", function () {
     forms.forEach(function (form) {
         form.addEventListener("submit", function (e) {
             e.preventDefault();
-            Notification.requestPermission();
+            if (location.protocol === "https:") {
+                Notification.requestPermission();
+            }
             var i = parseInt(form.id.split("_")[1]);
             var username = document.getElementById("username_" + i).value;
             var game_id = i;
@@ -149,33 +155,17 @@ document.addEventListener("DOMContentLoaded", function () {
                     const listItem = event.target.closest("div");
                     const username = listItem.getAttribute("username");
                     const op_code = localStorage.getItem("operator_code");
-                    socket.emit(
-                        "remove_user",
-                        {
-                            username: username,
-                            game_id: gameId,
-                            token: localStorage.getItem("token_" + gameId),
-                            operator_code: op_code,
-                        },
-                        (response) => {
-                            if (response.error) {
-                                console.error(
-                                    "Error removing user:",
-                                    response.error,
-                                );
-                            } else {
-                                console.log(
-                                    "User removed successfully:",
-                                    response,
-                                );
-                            }
-                        },
-                    );
-                    localStorage.removeItem("token_" + gameId);
                     var join_button = document.getElementById(
                         "join_button_" + gameId,
                     );
-                    join_button.classList.toggle("invisible");
+                    join_button.classList.remove("invisible");
+                    socket.emit("remove_user", {
+                        username: username,
+                        game_id: gameId,
+                        token: localStorage.getItem("token_" + gameId),
+                        operator_code: op_code,
+                    });
+                    localStorage.removeItem("token_" + gameId);
                 }
             });
             queueElement.addEventListener("click", function (event) {
@@ -277,6 +267,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 ) {
                     localStorage.removeItem("token_" + gameId);
                     localStorage.removeItem("token2_" + gameId);
+                    var join_button = document.getElementById(
+                        "join_button_" + gameId,
+                    );
+                    join_button.classList.remove("invisible");
                     vibrateDevice();
                     if (data.queue.operator) {
                         const message =
@@ -284,7 +278,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             data.queue.name +
                             " queue.";
                         showBrowserNotification(
-                            "Removed - " + data.name,
+                            "Removed",
                             message,
                             "/path/to/your/icon.png",
                         );
@@ -292,16 +286,12 @@ document.addEventListener("DOMContentLoaded", function () {
                             alert(message);
                         }, 1000);
                     } else if (user.timed_out) {
-                        var join_button = document.getElementById(
-                            "join_button_" + gameId,
-                        );
-                        join_button.classList.remove("invisible");
                         const message =
                             "You were removed from the " +
                             data.queue.name +
                             " queue as you did not confirm your spot.";
                         showBrowserNotification(
-                            "Removed - " + data.name,
+                            "Removed",
                             message,
                             "/path/to/your/icon.png",
                         );

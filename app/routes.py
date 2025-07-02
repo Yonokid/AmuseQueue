@@ -14,6 +14,7 @@ from app.helpers import (
     create_queues,
     get_random_token,
     load_config,
+    save_config,
     username_filtered,
     verify_operator_code,
 )
@@ -21,7 +22,7 @@ from app.helpers import (
 from . import socketio
 
 config_info = load_config()
-store_name = config_info['store']['store_name']
+store_name = config_info['store']['name']
 queues = create_queues(config_info)
 current_op_code = ''
 
@@ -157,6 +158,58 @@ def init_routes(app):
         token = get_random_token(operator_code, app.config['SECRET_KEY'])
         current_op_code = token
         return jsonify({'token': token})
+
+    @app.route('/api/store/edit', methods=['POST'])
+    def edit_store():
+        global current_op_code
+        data = request.get_json()
+        op_code = data.get('op_code', '').strip()
+        if not verify_operator_code(op_code, current_op_code):
+            return jsonify({
+                'success': False,
+                'message': 'Invalid Operator Code',
+            })
+        config_info['store']['name'] = data.get('name', '').strip()
+        config_info['store']['info'] = data.get('info', '').strip()
+        save_config(config_info)
+        return jsonify({
+            'success': True,
+            'message': 'Store information updated successfully',
+            'data': {
+                'name': config_info['store']['name'],
+                'info': config_info['store']['info']
+            }
+        })
+
+    @app.route('/api/queue/edit', methods=['POST'])
+    def edit_queue():
+        global current_op_code
+        data = request.get_json()
+        op_code = data.get('op_code', '').strip()
+        if not verify_operator_code(op_code, current_op_code):
+            return jsonify({
+                'success': False,
+                'message': 'Invalid Operator Code',
+            })
+        index = data.get('queue_index', None)+1
+        name = data.get('name', '').strip()
+        info = data.get('info', '').strip()
+        wait_time = data.get('wait_time', 0)
+        double_queue = data.get('double_queue', False)
+        config_info[f'game_{index}']['name'] = name
+        config_info[f'game_{index}']['info'] = info
+        config_info[f'game_{index}']['wait_time'] = wait_time
+        config_info[f'game_{index}']['double_queue'] = double_queue
+        save_config(config_info)
+        queues[index-1].name = name
+        queues[index-1].info = info
+        queues[index-1].wait_time = wait_time
+        queues[index-1].double_queue = double_queue
+        return jsonify({
+            'success': True,
+            'message': 'Queue information updated successfully',
+        })
+
 
     @app.route('/qrcode')
     def generate_qrcode():

@@ -1,29 +1,31 @@
 [store]
-store_name = 'Ikigai Arcade'
-store_announcement = ''
+name = "Ikigai Arcade"
+info = ""
 
 [game_1]
-name = 'maimai DX'
+name = "maimai DX"
+info = ""
 double_queue = true
-#wait_time = 947
-wait_time = 5
-confirm_time = 5
-#confirm_time = 120
+wait_time = 947
+confirm_time = 120
 
 [game_2]
-name = 'CHUNITHM'
+name = "CHUNITHM"
+info = ""
 double_queue = false
 wait_time = 785
 confirm_time = 120
 
 [game_3]
-name = 'ONGEKI'
+name = "ONGEKI"
+info = ""
 double_queue = false
 wait_time = 874
 confirm_time = 120
 
 [game_4]
-name = 'PUMP IT UP'
+name = "PUMP IT UP"
+info = ""
 double_queue = true
 wait_time = 780
 confirm_time = 120
