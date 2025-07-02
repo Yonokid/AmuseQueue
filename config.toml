@@ -1,11 +1,14 @@
 [store]
 store_name = 'Ikigai Arcade'
+store_announcement = ''
 
 [game_1]
 name = 'maimai DX'
 double_queue = true
-wait_time = 947
-confirm_time = 120
+#wait_time = 947
+wait_time = 5
+confirm_time = 5
+#confirm_time = 120
 
 [game_2]
 name = 'CHUNITHM'

@@ -3,6 +3,7 @@
     <div class="container d-flex flex-column justify-content-center">
         <div class="container p-4 text-center">
             <h1 class="text-center">{{ store['store_name'] }} Queue</h1>
+            <h3 class="text-center">{{ store['store_announcement'] }}</h3>
         </div>
             {% if view_only %}
             <div class="container p-1 text-center">
@@ -14,6 +15,7 @@
             <div class="container md-4 p-2 my-4 rounded bg-body-secondary text-center">
                 <div>
                     <h2><b>{{ queue['name'] }}</b></h2>
+                    <h3>{{ queue['announcement'] }}</h3>
                 </div>
                 <div>
                     <h4>Wait Time: {{ formatTime(queue['wait_time']|int) }}</h4>
@@ -44,7 +46,7 @@
                                     <div class="form-check mt-3">
                                         <input class="form-check-input" type="checkbox" value="" id="soloQueue_{{i}}">
                                         <label class="form-check-label" for="soloQueue_{{i}}">
-                                            Solo Queue (Available if queue is less than 5 players)
+                                            Solo Queue (Available if queue is less than 4 players)
                                         </label>
                                     </div>
                                 {% endif %}
@@ -82,35 +84,35 @@
                 </div>
             </div>
         </div>
-        <script>
-            document.getElementById('op-form').addEventListener('submit', function(event) {
-                event.preventDefault();
-                const operatorCode = document.getElementById('op-code').value;
-                fetch(`/api/operator?operator_code=${operatorCode}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        var token = data.token;
-                        localStorage.setItem('operator_code', token);
-                        const modalElement = document.getElementById('opModal');
-                        const modal = bootstrap.Modal.getInstance(modalElement);
-                        modal.hide();
-                        const deleteBtns = document.getElementsByClassName('delete-btn');
-                        Array.from(deleteBtns).forEach(function(deleteBtn) {
-                            deleteBtn.classList.toggle("invisible");
-                        });
-                        const confirmBtns = document.getElementsByClassName('confirm-btn');
-                        Array.from(confirmBtns).forEach(function(confirmBtn)) {
-                            confirmBtn.classList.toggle("invisible");
-                        });
-                    })
-                .catch(error => {
-                    var opModalText = document.getElementById('opModalLabel');
-                    opModalText.textContent = 'Incorrect Code!';
-                    opModalText.classList.add("text-danger-emphasis");
-                    console.error('Error fetching token:', error);
-                });
-            });
-        </script>
-        <script src="{{url_for('static', filename='main.js')}}"></script>
     </div>
+    <script src="{{url_for('static', filename='main.js')}}"></script>
+    <script>
+        document.getElementById('op-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const operatorCode = document.getElementById('op-code').value;
+            fetch(`/api/operator?operator_code=${operatorCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    var token = data.token;
+                    localStorage.setItem('operator_code', token);
+                    const modalElement = document.getElementById('opModal');
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    modal.hide();
+                    const deleteBtns = document.getElementsByClassName('delete-btn');
+                    Array.from(deleteBtns).forEach(function(deleteBtn) {
+                        deleteBtn.classList.toggle("invisible");
+                    });
+                    const confirmBtns = document.getElementsByClassName('confirm-btn');
+                    Array.from(confirmBtns).forEach(function(confirmBtn) {
+                        confirmBtn.classList.toggle("invisible");
+                    });
+                })
+            .catch(error => {
+                var opModalText = document.getElementById('opModalLabel');
+                opModalText.textContent = 'Incorrect Code!';
+                opModalText.classList.add("text-danger-emphasis");
+                console.error('Error fetching token:', error);
+            });
+        });
+    </script>
 {% endblock %}

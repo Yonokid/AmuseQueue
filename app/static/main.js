@@ -73,6 +73,27 @@ function createConfirmButton(user) {
     spanConfirm.appendChild(confirmButton);
     return spanConfirm;
 }
+function showBrowserNotification(title, message, icon = null) {
+    if ("Notification" in window && Notification.permission === "granted") {
+        const notification = new Notification(title, {
+            body: message,
+            icon: icon || "/favicon.ico",
+            badge: icon || "/favicon.ico",
+            tag: "game-notification",
+            requireInteraction: true,
+            silent: false,
+        });
+
+        setTimeout(() => {
+            notification.close();
+        }, 10000);
+
+        notification.onclick = function () {
+            window.focus();
+            notification.close();
+        };
+    }
+}
 document.addEventListener("DOMContentLoaded", function () {
     var socket = io.connect(
         location.protocol + "//" + document.domain + ":" + location.port,
@@ -82,6 +103,7 @@ document.addEventListener("DOMContentLoaded", function () {
     forms.forEach(function (form) {
         form.addEventListener("submit", function (e) {
             e.preventDefault();
+            Notification.requestPermission();
             var i = parseInt(form.id.split("_")[1]);
             var username = document.getElementById("username_" + i).value;
             var game_id = i;
@@ -257,24 +279,34 @@ document.addEventListener("DOMContentLoaded", function () {
                     localStorage.removeItem("token2_" + gameId);
                     vibrateDevice();
                     if (data.queue.operator) {
+                        const message =
+                            "An operator removed you from the " +
+                            data.queue.name +
+                            " queue.";
+                        showBrowserNotification(
+                            "Removed - " + data.name,
+                            message,
+                            "/path/to/your/icon.png",
+                        );
                         setTimeout(function () {
-                            alert(
-                                "An operator removed you from the " +
-                                    data.queue.name +
-                                    " queue.",
-                            );
+                            alert(message);
                         }, 1000);
                     } else if (user.timed_out) {
                         var join_button = document.getElementById(
                             "join_button_" + gameId,
                         );
                         join_button.classList.remove("invisible");
+                        const message =
+                            "You were removed from the " +
+                            data.queue.name +
+                            " queue as you did not confirm your spot.";
+                        showBrowserNotification(
+                            "Removed - " + data.name,
+                            message,
+                            "/path/to/your/icon.png",
+                        );
                         setTimeout(function () {
-                            alert(
-                                "You were removed from the " +
-                                    data.queue.name +
-                                    " queue as you did not confirm your spot.",
-                            );
+                            alert(message);
                         }, 1000);
                     }
                 }
@@ -305,12 +337,17 @@ document.addEventListener("DOMContentLoaded", function () {
                             matchingDiv[0].children[2].remove();
                         }
                         vibrateDevice();
+                        const message =
+                            "Time is up! Head to the " +
+                            data.name +
+                            " machine! You have 2 minutes to confirm your spot.";
+                        showBrowserNotification(
+                            "Your Turn - " + data.name,
+                            message,
+                            "/path/to/your/icon.png",
+                        );
                         setTimeout(function () {
-                            alert(
-                                "Time is up! Head to the " +
-                                    data.name +
-                                    " machine! You have 2 minutes to confirm your spot.",
-                            );
+                            alert(message);
                         }, 1000);
                     }
                 });

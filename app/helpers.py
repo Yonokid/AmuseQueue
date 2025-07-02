@@ -19,12 +19,14 @@ class Queue:
         self.operator = False
         self.queue: list[list[Player]] = []
         self.double_queue = double_queue
+        self.announcement = ''
 
     def get_info(self) -> dict:
         return {'game_id': self.game_id, 'name': self.name,
                 'wait_time': self.wait_time, 'confirm_time': self.confirm_time,
                 'time_left': self.time_left, 'operator': self.operator,
-                'queue': [[player.get_info() for player in sublist] for sublist in self.queue]}
+                'queue': [[player.get_info() for player in sublist] for sublist in self.queue],
+                'announcement': self.announcement}
 
 class Player:
     def __init__(self, name, token, solo_queue=False):
@@ -95,8 +97,4 @@ def username_filtered(username: str, queue: Queue) -> bool:
 
 
 def verify_operator_code(operator_code: str, current_op_code: str) -> bool:
-    if current_op_code == '':
-        return False
-    if operator_code != current_op_code:
-        return False
-    return True
+    return current_op_code != '' and operator_code == current_op_code
