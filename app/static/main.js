@@ -112,7 +112,14 @@ document.addEventListener("DOMContentLoaded", function () {
         form.addEventListener("submit", function (e) {
             e.preventDefault();
             if (location.protocol === "https:") {
-                Notification.requestPermission();
+                if (
+                    typeof Notification === "undefined" ||
+                    !("Notification" in window)
+                ) {
+                    console.warn("Browser notifications are not supported");
+                } else {
+                    Notification.requestPermission();
+                }
             }
             var i = parseInt(form.id.split("_")[1]);
             var username = document.getElementById("username_" + i).value;
