@@ -74,6 +74,10 @@ function createConfirmButton(user) {
     return spanConfirm;
 }
 function showBrowserNotification(title, message, icon = null) {
+    if (typeof Notification === "undefined" || !("Notification" in window)) {
+        console.warn("Browser notifications are not supported");
+        return;
+    }
     if (
         "Notification" in window &&
         Notification.permission === "granted" &&
