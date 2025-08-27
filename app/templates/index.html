@@ -84,7 +84,7 @@
                             <div class="modal-body">
                                 <p id="joinModalText_{{i}}">Please write your username below.</p>
                                 <input type="text" class="form-control" placeholder="Username" aria-label="Username" id="username_{{i}}">
-                                {% if queue['double_queue'] %}
+                                {% if queue['double_queue'] and not queue['disable_solo_queue'] %}
                                     <div class="form-check mt-3">
                                         <input class="form-check-input" type="checkbox" value="" id="soloQueue_{{i}}">
                                         <label class="form-check-label" for="soloQueue_{{i}}">
@@ -129,6 +129,12 @@
                                     <input class="form-check-input" type="checkbox" id="queue-double-queue-{{i}}" {% if queue['double_queue'] %}checked{% endif %}>
                                     <label class="form-check-label" for="queue-double-queue-{{i}}">
                                         Enable Double Queue (Solo Queue option)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="queue-disable-solo-queue-{{i}}" {% if queue['disable_solo_queue'] %}checked{% endif %}>
+                                    <label class="form-check-label" for="queue-disable-solo-queue-{{i}}">
+                                        Disable Solo Queue (for double queues)
                                     </label>
                                 </div>
                             </div>
@@ -328,6 +334,7 @@
                 const queueInfo = document.getElementById(`queue-info-input-${queueIndex}`).value;
                 const waitTime = document.getElementById(`queue-wait-time-${queueIndex}`).value;
                 const doubleQueue = document.getElementById(`queue-double-queue-${queueIndex}`).checked;
+                const disableSoloQueue = document.getElementById(`queue-disable-solo-queue-${queueIndex}`).checked;
                 const operatorToken = localStorage.getItem('operator_code');
 
                 fetch('/api/queue/edit', {
@@ -342,6 +349,7 @@
                         wait_time: parseInt(waitTime),
                         double_queue: doubleQueue,
                         op_code: operatorToken,
+                        disable_solo_queue: disableSoloQueue,
                     })
                 })
                 .then(response => response.json())

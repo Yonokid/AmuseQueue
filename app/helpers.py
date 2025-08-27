@@ -22,6 +22,7 @@ class Queue:
         self.operator = False
         self.queue: list[list[Player]] = []
         self.double_queue = double_queue
+        self.disable_solo_queue = False
         self.info = info
 
     def get_info(self) -> dict:

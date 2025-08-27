@@ -129,10 +129,24 @@ def handle_join_queue(data):
     username: str = data.get('username')
     solo_queue: bool = data.get('solo_queue')
     queue = queues[game_id]
-    if len(queue.queue) >= 4:
+
+    # Override solo_queue if disabled
+    if queue.disable_solo_queue:
         solo_queue = False
+
     token = data.get('token')
-    if (solo_queue or len(queue.queue) == 0 or len(queue.queue[-1]) == 2 or queue.queue[-1][0].solo_queue) or not queue.double_queue:
+
+    should_create_new_entry = (
+        solo_queue or  # Player wants solo queue (and it's allowed)
+        len(queue.queue) == 0 or  # Queue is empty
+        len(queue.queue[-1]) == 2 or  # Last entry is full
+        queue.queue[-1][0].solo_queue or  # Last entry is solo queue
+        not queue.double_queue  # Double queue is disabled globally
+    )
+
+    if queue.disable_solo_queue and len(queue.queue) > 0 and len(queue.queue[-1]) == 1:
+        queue.queue[-1].append(Player(username, token, solo_queue=False))
+    elif should_create_new_entry:
         queue.queue.append([Player(username, token, solo_queue=solo_queue)])
         start_timer(queue, game_id)
     else:
@@ -213,15 +227,18 @@ def init_routes(app):
         info = (data.get('info', '')).replace('\n', '<br>')
         wait_time = data.get('wait_time', 0)
         double_queue = data.get('double_queue', False)
+        disable_solo_queue = data.get('disable_solo_queue', False)
         config_info[f'game_{index}']['name'] = name
         config_info[f'game_{index}']['info'] = info
         config_info[f'game_{index}']['wait_time'] = wait_time
         config_info[f'game_{index}']['double_queue'] = double_queue
+        config_info[f'game_{index}']['double_queue'] = disable_solo_queue
         save_config(config_info)
         queues[index-1].name = name
         queues[index-1].info = info
         queues[index-1].wait_time = wait_time
         queues[index-1].double_queue = double_queue
+        queues[index-1].disable_solo_queue = disable_solo_queue
         return jsonify({
             'success': True,
             'message': 'Queue information updated successfully',
