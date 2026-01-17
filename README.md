@@ -22,6 +22,7 @@ Here're some of the project's best features:
 *   Double queue system for 2 player games
 *   Configurable store settings
 *   Live operator access
+*   Queue reordering via drag-and-drop (operator only)
 *   Kiosk mode with auto generating QR code for quick access
 
 <h2>Installation Steps:</h2>

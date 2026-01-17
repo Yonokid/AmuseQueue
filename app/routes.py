@@ -123,6 +123,78 @@ def handle_remove_user(data):
         start_timer(queue, game_id)
     socketio.emit('queue_update', queue.get_info())
 
+@socketio.on('reorder_queue')
+def handle_reorder_queue(data):
+    game_id: int = data.get('game_id')
+    operator_code = data.get('operator_code')
+    old_index: int = data.get('old_index')
+    new_index: int = data.get('new_index')
+
+    if not verify_operator_code(operator_code, current_op_code):
+        return
+
+    queue = queues[game_id]
+
+    if old_index < 0 or old_index >= len(queue.queue):
+        return
+    if new_index < 0 or new_index >= len(queue.queue):
+        return
+
+    group = queue.queue.pop(old_index)
+    queue.queue.insert(new_index, group)
+
+    socketio.emit('queue_update', queue.get_info())
+
+@socketio.on('move_player')
+def handle_move_player(data):
+    game_id: int = data.get('game_id')
+    operator_code = data.get('operator_code')
+    player_username: str = data.get('player_username')
+    source_group_index: int = data.get('source_group_index')
+    target_group_index: int = data.get('target_group_index')
+
+    if not verify_operator_code(operator_code, current_op_code):
+        return
+
+    queue = queues[game_id]
+
+    if source_group_index < 0 or source_group_index >= len(queue.queue):
+        return
+    if target_group_index < 0 or target_group_index > len(queue.queue):
+        return
+
+    source_group = queue.queue[source_group_index]
+
+    player_to_move = None
+    for player in source_group:
+        if player.username == player_username:
+            player_to_move = player
+            break
+
+    if player_to_move is None:
+        return
+
+    source_group.remove(player_to_move)
+
+    if len(source_group) == 0:
+        queue.queue.pop(source_group_index)
+        if target_group_index > source_group_index:
+            target_group_index -= 1
+
+    if target_group_index == len(queue.queue):
+        queue.queue.append([player_to_move])
+    else:
+        target_group = queue.queue[target_group_index]
+        if len(target_group) < 2:
+            target_group.append(player_to_move)
+            # Clear solo_queue flag if joining another player
+            if len(target_group) == 2:
+                player_to_move.solo_queue = False
+        else:
+            queue.queue.insert(target_group_index + 1, [player_to_move])
+
+    socketio.emit('queue_update', queue.get_info())
+
 @socketio.on('join_queue')
 def handle_join_queue(data):
     game_id: int = data.get('game_id')
