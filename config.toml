@@ -4,26 +4,33 @@ info = "1.You are <b>REQUIRED</b> to put yourself in the queue to play any maima
 
 [game_1]
 name = "maimai DX"
-info = "Test"
+info = ""
 double_queue = true
 wait_time = 947
 confirm_time = 120
 
-[game_2]
+[game_3]
+name = "Sound Voltex"
+info = ""
+double_queue = false
+wait_time = 780
+confirm_time = 120
+
+[game_3]
 name = "CHUNITHM"
 info = ""
 double_queue = false
 wait_time = 785
 confirm_time = 120
 
-[game_3]
+[game_4]
 name = "ONGEKI"
 info = ""
 double_queue = false
 wait_time = 874
 confirm_time = 120
 
-[game_4]
+[game_5]
 name = "PUMP IT UP"
 info = ""
 double_queue = true
