@@ -9,7 +9,7 @@ double_queue = true
 wait_time = 947
 confirm_time = 120
 
-[game_3]
+[game_2]
 name = "Sound Voltex"
 info = ""
 double_queue = false
