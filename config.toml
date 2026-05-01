@@ -10,7 +10,7 @@ wait_time = 947
 confirm_time = 120
 
 [game_2]
-name = "Sound Voltex"
+name = "DDR"
 info = ""
 double_queue = false
 wait_time = 780
